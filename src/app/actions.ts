@@ -129,7 +129,6 @@ export async function runBacktestAction(formData: FormData): Promise<{ data?: Ba
 
         let wins = 0;
         let losses = 0;
-        let totalProfit = 0;
         let totalWinAmount = 0;
         let totalLossAmount = 0;
         let activeTrade: { signal: TradeSignalOutput, type: 'Buy' | 'Sell' } | null = null;
