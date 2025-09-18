@@ -83,7 +83,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         const { signal, source, series, inputs, timestamp } = JSON.parse(savedSignal) as StoredSignal;
         setGeneratedSignal(signal);
         setDataSource(source);
-        setChartSeries(series);
+        setChartSeries(series || []);
         setLastInputs(inputs);
         setGenerationTimestamp(timestamp);
       }
@@ -366,7 +366,7 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestam
                 </div>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
-                {chartSeries.length > 0 && <div className="flex-1"><MarketChart data={chartSeries} /></div>}
+                {chartSeries && chartSeries.length > 0 && <div className="flex-1"><MarketChart data={chartSeries} /></div>}
                 
                 <div className="p-4 bg-primary/10 rounded-lg text-center">
                     <p className="text-sm text-primary font-semibold">Lot Size</p>
@@ -483,3 +483,5 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
         </TooltipContent>
     </Tooltip>
 );
+
+    
