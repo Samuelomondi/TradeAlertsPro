@@ -31,7 +31,6 @@ import { Separator } from "@/components/ui/separator";
 import SignalGeneration from "./signal-generation";
 import TradeHistory from "./trade-history";
 import RiskCalculator from "./risk-calculator";
-import BotInfo from "./bot-info";
 import MarketHours from "./market-hours";
 import NewsWarning from "./news-warning";
 import Help from "./help";
@@ -42,7 +41,11 @@ type View = "signals" | "history" | "risk" | "info" | "market" | "news" | "help"
 
 const TRADE_HISTORY_STORAGE_KEY = "tradeHistory";
 
-export default function Dashboard() {
+type DashboardProps = {
+  botInfo: React.ReactNode;
+};
+
+export default function Dashboard({ botInfo }: DashboardProps) {
   const [activeView, setActiveView] = useState<View>("signals");
   const [history, setHistory] = useState<TradeHistoryEntry[]>([]);
   const [accountBalance, setAccountBalance] = useState(10000);
@@ -92,7 +95,7 @@ export default function Dashboard() {
             {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} />}
             {activeView === 'history' && <TradeHistory history={history} updateTradeStatus={updateTradeStatus} />}
             {activeView === 'risk' && <RiskCalculator accountBalance={accountBalance} riskPercentage={riskPercentage} setAccountBalance={setAccountBalance} setRiskPercentage={setRiskPercentage} />}
-            {activeView === 'info' && <BotInfo />}
+            {activeView === 'info' && botInfo}
             {activeView === 'market' && <MarketHours />}
             {activeView === 'news' && <NewsWarning />}
             {activeView === 'help' && <Help />}
