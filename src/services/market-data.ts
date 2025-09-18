@@ -29,31 +29,28 @@ const BASE_URL = 'https://api.twelvedata.com';
 
 // Helper to make API calls to Twelve Data
 async function fetchTwelveData(endpoint: string, params: Record<string, string>) {
-  if (!API_KEY || API_KEY === "YOUR_TWELVE_DATA_API_KEY") {
-    throw new Error('Twelve Data API key is not configured.');
-  }
-  const query = new URLSearchParams({...params, apikey: API_KEY}).toString();
+  const query = new URLSearchParams({...params, apikey: API_KEY!}).toString();
   const url = `${BASE_URL}/${endpoint}?${query}`;
   
   try {
     const response = await fetch(url);
     if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Twelve Data API Error (${response.status}): ${errorText}`);
-        throw new Error(`Failed to fetch data from Twelve Data. Status: ${response.status}`);
+        console.error(`Twelve Data API Error (${response.status}) for ${endpoint}: ${errorText}`);
+        throw new Error(`API returned status ${response.status} for ${endpoint}`);
     }
     const data = await response.json();
     if (data.status === 'error' || data.code < 200 || data.code >= 300) {
-        console.error('Twelve Data API Error:', data);
-        throw new Error(data.message || 'Failed to fetch data from Twelve Data.');
+        console.error(`Twelve Data API Error for ${endpoint}:`, data);
+        throw new Error(data.message || `Failed to fetch ${endpoint}`);
     }
     return data;
   } catch (error) {
-    console.error(`Error fetching from ${url}:`, error);
+    console.error(`Network or fetch error for ${url}:`, error);
     if (error instanceof Error) {
-        throw new Error(`Failed to retrieve market data from Twelve Data: ${error.message}`);
+        throw new Error(`Failed to retrieve ${endpoint} from Twelve Data: ${error.message}`);
     }
-    throw new Error('An unknown error occurred while fetching from Twelve Data.');
+    throw new Error(`An unknown error occurred while fetching ${endpoint}.`);
   }
 }
 
@@ -78,6 +75,13 @@ export async function getMarketData(
   currencyPair: string,
   timeframe: string
 ): Promise<MarketDataResponse> {
+  // Clear check for API key before making any calls.
+  if (!API_KEY || API_KEY === "YOUR_TWELVE_DATA_API_KEY") {
+    console.warn('Twelve Data API key is not configured. Falling back to mock data.');
+    const { latest } = generateMockMarketData(currencyPair);
+    return { latest, source: 'mock' };
+  }
+
   const intervalMap: { [key: string]: string } = {
       '1M': '1min', '5M': '5min', '15M': '15min', '30M': '30min', '1H': '1h', '4H': '4h', '1D': '1day', '1W': '1week'
   };
@@ -117,8 +121,8 @@ export async function getMarketData(
 
     return { latest, source: 'live' };
   } catch (error) {
-     console.error('Error fetching market data from Twelve Data:', error);
-     console.log('Falling back to mock data.');
+     console.error('Error fetching one or more market data indicators from Twelve Data:', error);
+     console.log('Falling back to mock data for signal generation.');
      const { latest } = generateMockMarketData(currencyPair);
      return { latest, source: 'mock' };
   }

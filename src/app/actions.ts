@@ -39,18 +39,15 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
       validatedFields.data.timeframe
     );
 
-    if (marketData.source === 'mock') {
-        return { error: "Failed to fetch live market data. Please check your API configuration or try again later. No signal was generated." };
-    }
-
     const signal = await generateTradeSignal({ ...validatedFields.data, marketData: marketData.latest });
     
-    if (signal) {
+    if (signal && marketData.source === 'live') {
         const message = formatSignalMessage(signal, validatedFields.data.currencyPair, validatedFields.data.timeframe, marketData.source);
         try {
             await sendTelegramMessage(message);
         } catch (telegramError) {
             console.error("Failed to send Telegram message:", telegramError);
+            // Non-fatal, don't block the UI for this
         }
     }
 
@@ -59,8 +56,9 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
 
   } catch (error) {
     console.error("Error generating trade signal:", error);
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
     return {
-      error: "Failed to generate trade signal. Please try again.",
+      error: `Failed to generate trade signal: ${errorMessage}`,
     };
   }
 }
@@ -77,7 +75,7 @@ export async function getSystemStatus(): Promise<SystemStatus> {
     return {
         gemini: (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 0) ? 'Configured' : 'Not Configured',
         twelveData: (process.env.TWELVE_DATA_API_KEY && process.env.TWELVE_DATA_API_KEY.length > 0) ? 'Configured' : 'Not Configured',
-        telegram: (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN.length > 0) ? 'Configured' : 'Not Configured'
+        telegram: (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN.length > 0 && process.env.TELEGRAM_CHAT_ID && process.env.TELEGRAM_CHAT_ID.length > 0) ? 'Configured' : 'Not Configured'
     };
 }
 

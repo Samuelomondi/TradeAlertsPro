@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle, XCircle, BrainCircuit, LineChart, Send } from "lucide-react";
+import { CircleCheckBig, CircleX, BrainCircuit, LineChart, Send } from "lucide-react";
 import { getSystemStatus } from '@/app/actions';
 
 export default async function BotInfo() {
@@ -26,7 +26,7 @@ export default async function BotInfo() {
             <div className="flex-1">
               <p className="text-sm text-muted-foreground">{item.label}</p>
               <div className="flex items-center gap-2">
-                {item.value === 'Configured' ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
+                {item.value === 'Configured' ? <CircleCheckBig className="w-5 h-5 text-green-500" /> : <CircleX className="w-5 h-5 text-red-500" />}
                 <p className={`font-semibold ${item.value === 'Configured' ? 'text-green-600' : 'text-red-600'}`}>{item.value}</p>
               </div>
             </div>

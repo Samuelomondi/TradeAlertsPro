@@ -84,14 +84,14 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         setError(result.error);
         toast({
             variant: "destructive",
-            title: "Error",
+            title: "Error Generating Signal",
             description: result.error,
         });
     } else if (result.data) {
         setGeneratedSignal(result.data.signal);
         setDataSource(result.data.source);
         
-        const toastDescription = `A new ${result.data.signal.signal} signal for ${values.currencyPair} has been generated and sent.`;
+        const toastDescription = `A new ${result.data.signal.signal} signal for ${values.currencyPair} has been generated.`;
 
         toast({
             title: "Signal Generated",
@@ -110,7 +110,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     }
   }
 
-  const showResults = generatedSignal && dataSource === 'live';
+  const showResults = generatedSignal;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -193,7 +193,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                 <div className="h-full flex items-center justify-center p-4">
                     <Alert variant="destructive">
                         <TriangleAlert className="h-4 w-4" />
-                        <AlertTitle>Data Fetching Failed</AlertTitle>
+                        <AlertTitle>An Error Occurred</AlertTitle>
                         <AlertDescription>
                             {error}
                         </AlertDescription>
@@ -201,7 +201,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                 </div>
             )}
 
-            {showResults && !isLoading &&(
+            {showResults && !isLoading && !error &&(
                 <div className="animate-in fade-in-50 duration-500 h-full">
                     <GeneratedSignalCard signal={generatedSignal} inputs={form.getValues()} dataSource={dataSource} />
                 </div>
@@ -280,5 +280,3 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
         <span className="font-medium">{label}</span>
     </div>
 );
-
-    
