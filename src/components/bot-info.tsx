@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { useSettings, type AppSettings } from './settings-provider';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { KeyRound, Info, Bell, Send, Link } from 'lucide-react';
+import { KeyRound, Info, Bell, Send, Eye, EyeOff } from 'lucide-react';
 
 const formSchema = z.object({
   geminiApiKey: z.string().min(1, 'Gemini API Key is required.'),
@@ -37,6 +37,8 @@ const formSchema = z.object({
 export default function BotInfo() {
   const { settings, setSettings } = useSettings();
   const { toast } = useToast();
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [showTwelveDataKey, setShowTwelveDataKey] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,11 +89,20 @@ export default function BotInfo() {
                         <div className="relative">
                         <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
-                            type="password"
+                            type={showGeminiKey ? 'text' : 'password'}
                             placeholder="Enter your Gemini API Key"
-                            className="pl-8"
+                            className="pl-8 pr-10"
                             {...field}
                         />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent"
+                            onClick={() => setShowGeminiKey(!showGeminiKey)}
+                        >
+                            {showGeminiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
                         </div>
                     </FormControl>
                     <FormMessage />
@@ -109,11 +120,20 @@ export default function BotInfo() {
                         <div className="relative">
                         <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
-                            type="password"
+                            type={showTwelveDataKey ? 'text' : 'password'}
                             placeholder="Enter your Twelve Data API Key"
-                            className="pl-8"
+                            className="pl-8 pr-10"
                             {...field}
                         />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent"
+                            onClick={() => setShowTwelveDataKey(!showTwelveDataKey)}
+                        >
+                            {showTwelveDataKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
                         </div>
                     </FormControl>
                     <FormMessage />

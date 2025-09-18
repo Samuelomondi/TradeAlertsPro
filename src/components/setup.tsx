@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useSettings, type AppSettings } from './settings-provider';
 import { useToast } from '@/hooks/use-toast';
-import { KeyRound, Waves, Bell, Send } from 'lucide-react';
+import { KeyRound, Waves, Bell, Send, Eye, EyeOff } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 const formSchema = z.object({
@@ -37,6 +37,8 @@ const formSchema = z.object({
 export default function Setup() {
   const { settings, setSettings } = useSettings();
   const { toast } = useToast();
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [showTwelveDataKey, setShowTwelveDataKey] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -89,11 +91,23 @@ export default function Setup() {
                     <FormItem>
                       <FormLabel>Gemini API Key (Required)</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Enter your Google AI Studio API Key"
-                          {...field}
-                        />
+                        <div className="relative">
+                            <Input
+                            type={showGeminiKey ? 'text' : 'password'}
+                            placeholder="Enter your Google AI Studio API Key"
+                            className="pr-10"
+                            {...field}
+                            />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent"
+                                onClick={() => setShowGeminiKey(!showGeminiKey)}
+                            >
+                                {showGeminiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -107,11 +121,23 @@ export default function Setup() {
                     <FormItem>
                       <FormLabel>Twelve Data API Key (Required)</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Enter your Twelve Data API Key"
-                          {...field}
-                        />
+                        <div className="relative">
+                            <Input
+                            type={showTwelveDataKey ? 'text' : 'password'}
+                            placeholder="Enter your Twelve Data API Key"
+                            className="pr-10"
+                            {...field}
+                            />
+                             <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent"
+                                onClick={() => setShowTwelveDataKey(!showTwelveDataKey)}
+                            >
+                                {showTwelveDataKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
