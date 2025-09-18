@@ -61,6 +61,7 @@ export default function BotInfo() {
 
   const isGeminiConfigured = !!settings.geminiApiKey;
   const isTwelveDataConfigured = !!settings.twelveDataApiKey;
+  const isTelegramConfigured = !!settings.telegramChatId;
 
   return (
     <Card>
@@ -104,6 +105,16 @@ export default function BotInfo() {
                   <div className={cn("flex items-center gap-2 text-sm font-semibold", isTwelveDataConfigured ? "text-green-600" : "text-red-600")}>
                       {isTwelveDataConfigured ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
                       {isTwelveDataConfigured ? 'Configured' : 'Missing Key'}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium">Telegram Notifications</p>
+                    <p className="text-xs text-muted-foreground">Sends private trade signals to your chat.</p>
+                  </div>
+                  <div className={cn("flex items-center gap-2 text-sm font-semibold", isTelegramConfigured ? "text-green-600" : "text-red-600")}>
+                      {isTelegramConfigured ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                      {isTelegramConfigured ? 'Configured' : 'Not Configured'}
                   </div>
                 </div>
               </div>
@@ -211,5 +222,3 @@ export default function BotInfo() {
     </Card>
   );
 }
-
-    
