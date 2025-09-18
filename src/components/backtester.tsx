@@ -194,7 +194,7 @@ const ResultsCard = ({ results }: { results: BacktestResults }) => {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                     <InfoItem icon={BarChart} label="Total Trades" value={String(results.totalTrades)} />
                     <InfoItem icon={Percent} label="Win Rate" value={`${results.winRate.toFixed(1)}%`} />
-                    <Info-item icon={CheckCircle} label="Trades Won" value={String(results.wins)} />
+                    <InfoItem icon={CheckCircle} label="Trades Won" value={String(results.wins)} />
                     <InfoItem icon={XCircle} label="Trades Lost" value={String(results.losses)} />
                     <InfoItem icon={DollarSign} label="Average Win" value={`$${results.avgWin.toFixed(2)}`} />
                     <InfoItem icon={DollarSign} label="Average Loss" value={`$${results.avgLoss.toFixed(2)}`} />
