@@ -41,7 +41,12 @@ export default function Setup() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: settings,
+    defaultValues: {
+        geminiApiKey: settings.geminiApiKey || '',
+        twelveDataApiKey: settings.twelveDataApiKey || '',
+        telegramBotToken: settings.telegramBotToken || '',
+        telegramChatId: settings.telegramChatId || '',
+    },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
