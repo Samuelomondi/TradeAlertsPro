@@ -1,4 +1,3 @@
-
 # TradeAlert
 
 TradeAlert is a web application designed to assist forex traders by generating trade signals using deterministic technical analysis. It provides a dashboard with tools for signal generation, a live market chart, risk management, trade history tracking, and a comprehensive sentiment analysis view with crucial market information. It also integrates with Telegram to send real-time signal notifications.
@@ -79,5 +78,3 @@ The application is structured into several key components:
 - **Configuration (`src/lib`)**: Contains constants, type definitions, and utility functions used throughout the application.
 
 ![final](https://storage.googleapis.com/aip-dev-user-id-0213ba43/46f6f96d-3575-4702-8d48-31628d7120a1.png)
-
-```
