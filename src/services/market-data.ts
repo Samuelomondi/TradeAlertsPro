@@ -1,8 +1,20 @@
+
 import {z} from 'zod';
 import fetch from 'node-fetch';
 
-// Define the schema for the market data
-export const MarketDataSchema = z.object({
+// Schema for a single data point in the time series
+export const MarketDataPointSchema = z.object({
+    time: z.string(),
+    price: z.number(),
+    ema20: z.number().optional(),
+    ema50: z.number().optional(),
+});
+
+// Schema for the entire time series
+export const MarketDataSeriesSchema = z.array(MarketDataPointSchema);
+
+// Schema for the latest indicator values used by the AI
+export const LatestIndicatorsSchema = z.object({
   currentPrice: z.number(),
   ema20: z.number(),
   ema50: z.number(),
@@ -13,15 +25,22 @@ export const MarketDataSchema = z.object({
   bollingerLower: z.number(),
 });
 
-export type MarketData = z.infer<typeof MarketDataSchema>;
+
+export type MarketDataPoint = z.infer<typeof MarketDataPointSchema>;
+export type MarketDataSeries = z.infer<typeof MarketDataSeriesSchema>;
+export type LatestIndicators = z.infer<typeof LatestIndicatorsSchema>;
 export type MarketDataSource = 'live' | 'mock';
+
 export type MarketDataResponse = {
-    data: MarketData,
+    latest: LatestIndicators,
+    series: MarketDataSeries,
     source: MarketDataSource
 };
 
 const API_KEY = process.env.TWELVE_DATA_API_KEY;
 const BASE_URL = 'https://api.twelvedata.com';
+const SERIES_OUTPUT_SIZE = 50;
+
 
 // Helper to make API calls to Twelve Data
 async function fetchTwelveData(endpoint: string, params: Record<string, string>) {
@@ -33,6 +52,11 @@ async function fetchTwelveData(endpoint: string, params: Record<string, string>)
   
   try {
     const response = await fetch(url);
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Twelve Data API Error (${response.status}): ${errorText}`);
+        throw new Error(`Failed to fetch data from Twelve Data. Status: ${response.status}`);
+    }
     const data = await response.json();
     if (data.status === 'error' || data.code < 200 || data.code >= 300) {
         console.error('Twelve Data API Error:', data);
@@ -41,7 +65,10 @@ async function fetchTwelveData(endpoint: string, params: Record<string, string>)
     return data;
   } catch (error) {
     console.error(`Error fetching from ${url}:`, error);
-    throw new Error('Failed to retrieve market data from Twelve Data.');
+    if (error instanceof Error) {
+        throw new Error(`Failed to retrieve market data from Twelve Data: ${error.message}`);
+    }
+    throw new Error('An unknown error occurred while fetching from Twelve Data.');
   }
 }
 
@@ -51,10 +78,9 @@ function getMostRecentValue(data: any, key: string) {
         throw new Error(`Invalid data structure or empty values for ${key}`);
     }
     const latestValue = data.values[0][key];
-    if (latestValue === undefined) throw new Error(`Could not find recent value for ${key}`);
+    if (latestValue === undefined || latestValue === null) throw new Error(`Could not find recent value for ${key}`);
     return parseFloat(latestValue);
 }
-
 
 /**
  * Fetches market data for a given currency pair and timeframe from Twelve Data.
@@ -72,80 +98,94 @@ export async function getMarketData(
   };
   const interval = intervalMap[timeframe] || '1h';
   
-  const commonParams = { symbol: currencyPair, interval, outputsize: '1' };
+  const commonParams = { symbol: currencyPair, interval };
   
   try {
     const [
-      priceData,
-      ema20Data,
-      ema50Data,
+      seriesData,
       rsiData,
       atrData,
       macdData,
       bbandsData
     ] = await Promise.all([
-      fetchTwelveData('price', { symbol: currencyPair }),
-      fetchTwelveData('ema', { ...commonParams, time_period: '20' }),
-      fetchTwelveData('ema', { ...commonParams, time_period: '50' }),
-      fetchTwelveData('rsi', { ...commonParams, time_period: '14' }),
-      fetchTwelveData('atr', { ...commonParams, time_period: '14' }),
-      fetchTwelveData('macd', { ...commonParams, fast_period: '12', slow_period: '26', signal_period: '9' }),
-      fetchTwelveData('bbands', { ...commonParams, time_period: '20', sd: '2' }),
+      fetchTwelveData('time_series', { ...commonParams, outputsize: String(SERIES_OUTPUT_SIZE), order: 'ASC', dp: '5', timezone: 'UTC' }),
+      fetchTwelveData('rsi', { ...commonParams, outputsize: '1', time_period: '14' }),
+      fetchTwelveData('atr', { ...commonParams, outputsize: '1', time_period: '14' }),
+      fetchTwelveData('macd', { ...commonParams, outputsize: '1', fast_period: '12', slow_period: '26', signal_period: '9' }),
+      fetchTwelveData('bbands', { ...commonParams, outputsize: '1', time_period: '20', sd: '2' }),
     ]);
 
-    const currentPrice = parseFloat(priceData.price);
-    if (!currentPrice) throw new Error('Could not fetch current price.');
+    if (!seriesData.values || seriesData.values.length === 0) {
+        throw new Error('Time series data is empty.');
+    }
 
-    const marketData = {
-      currentPrice,
-      ema20: getMostRecentValue(ema20Data, 'ema'),
-      ema50: getMostRecentValue(ema50Data, 'ema'),
-      rsi: getMostRecentValue(rsiData, 'rsi'),
-      atr: getMostRecentValue(atrData, 'atr'),
-      macdHistogram: getMostRecentValue(macdData, 'macd_hist'),
-      bollingerUpper: getMostRecentValue(bbandsData, 'upper_band'),
-      bollingerLower: getMostRecentValue(bbandsData, 'lower_band'),
+    const latestDataPoint = seriesData.values[seriesData.values.length - 1];
+    
+    const latest: LatestIndicators = {
+        currentPrice: parseFloat(latestDataPoint.close),
+        ema20: parseFloat(latestDataPoint.ema_20),
+        ema50: parseFloat(latestDataPoint.ema_50),
+        rsi: getMostRecentValue(rsiData, 'rsi'),
+        atr: getMostRecentValue(atrData, 'atr'),
+        macdHistogram: getMostRecentValue(macdData, 'macd_hist'),
+        bollingerUpper: getMostRecentValue(bbandsData, 'upper_band'),
+        bollingerLower: getMostRecentValue(bbandsData, 'lower_band'),
     };
-    return { data: marketData, source: 'live' };
+
+    const series: MarketDataSeries = seriesData.values.map((v: any) => ({
+        time: v.datetime,
+        price: parseFloat(v.close),
+        ema20: v.ema_20 ? parseFloat(v.ema_20) : undefined,
+        ema50: v.ema_50 ? parseFloat(v.ema_50) : undefined,
+    }));
+
+    return { latest, series, source: 'live' };
   } catch (error) {
      console.error('Error fetching market data from Twelve Data:', error);
-     // Fallback to mock data if the API fails
      console.log('Falling back to mock data.');
-     const mockData = generateMockMarketData(currencyPair);
-     return { data: mockData, source: 'mock' };
+     const { latest, series } = generateMockMarketData(currencyPair);
+     return { latest, series, source: 'mock' };
   }
 }
 
 /**
- * Generates mock market data. In a real application, this would be replaced
- * with a call to a live data provider.
+ * Generates mock market data.
  * @param currencyPair The currency pair to generate data for.
- * @returns Mock market data.
+ * @returns Mock market data including latest values and a time series.
  */
-function generateMockMarketData(currencyPair: string): MarketData {
-  const basePrice = getBasePriceForPair(currencyPair);
-  const volatility = Math.random() * 0.005; // Simulate some market movement
+function generateMockMarketData(currencyPair: string): { latest: LatestIndicators, series: MarketDataSeries } {
+    const basePrice = getBasePriceForPair(currencyPair);
+    let currentPrice = basePrice;
+    const series: MarketDataSeries = [];
 
-  const currentPrice = basePrice * (1 + (Math.random() - 0.5) * volatility);
-  const ema20 = currentPrice * (1 - Math.random() * 0.002);
-  const ema50 = currentPrice * (1 - Math.random() * 0.005);
-  const rsi = 30 + Math.random() * 40; // RSI between 30 and 70
-  const atr = basePrice * 0.001 * (1 + Math.random());
-  const macdHistogram = (ema20 - ema50) * (Math.random() * 10);
-  const bollingerUpper = ema20 + 2 * (atr * 0.5);
-  const bollingerLower = ema20 - 2 * (atr * 0.5);
+    // Generate a plausible time series
+    for (let i = 0; i < SERIES_OUTPUT_SIZE; i++) {
+        const time = new Date(Date.now() - (SERIES_OUTPUT_SIZE - i) * 60 * 60 * 1000).toISOString();
+        currentPrice *= (1 + (Math.random() - 0.5) * 0.005);
+        series.push({
+            time,
+            price: currentPrice,
+            ema20: currentPrice * (1 - Math.random() * 0.002),
+            ema50: currentPrice * (1 - Math.random() * 0.005),
+        });
+    }
 
-  return {
-    currentPrice,
-    ema20,
-    ema50,
-    rsi,
-    atr,
-    macdHistogram,
-    bollingerUpper,
-    bollingerLower,
-  };
+    const latestPoint = series[series.length - 1];
+
+    const latest: LatestIndicators = {
+        currentPrice: latestPoint.price,
+        ema20: latestPoint.ema20!,
+        ema50: latestPoint.ema50!,
+        rsi: 30 + Math.random() * 40,
+        atr: basePrice * 0.001 * (1 + Math.random()),
+        macdHistogram: (latestPoint.ema20! - latestPoint.ema50!) * (Math.random() * 10),
+        bollingerUpper: latestPoint.ema20! + 2 * (basePrice * 0.001),
+        bollingerLower: latestPoint.ema20! - 2 * (basePrice * 0.001),
+    };
+
+    return { latest, series };
 }
+
 
 function getBasePriceForPair(pair: string): number {
   switch (pair) {

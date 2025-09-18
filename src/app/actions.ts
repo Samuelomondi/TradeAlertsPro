@@ -1,11 +1,13 @@
+
 "use server";
 
 import { z } from "zod";
-import { generateTradeSignal } from "@/ai/flows/signal-generation-gen-ai";
+import { generateTradeSignal, type TradeSignalOutput } from "@/ai/flows/signal-generation-gen-ai";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { formatSignalMessage } from "@/lib/utils";
 import { getMarketData } from "@/services/market-data";
 import { getEconomicNews, type EconomicEvent } from "@/ai/flows/economic-news-flow";
+import type { MarketDataSeries, MarketDataSource } from "@/services/market-data";
 
 const signalSchema = z.object({
   currencyPair: z.string(),
@@ -13,6 +15,12 @@ const signalSchema = z.object({
   accountBalance: z.coerce.number(),
   riskPercentage: z.coerce.number(),
 });
+
+type GenerateSignalSuccess = {
+    signal: TradeSignalOutput;
+    source: MarketDataSource;
+    series: MarketDataSeries;
+}
 
 export async function generateSignalAction(formData: FormData) {
   const rawData = Object.fromEntries(formData.entries());
@@ -27,11 +35,11 @@ export async function generateSignalAction(formData: FormData) {
   }
 
   try {
-    const { data: marketData, source } = await getMarketData(
+    const { latest, series, source } = await getMarketData(
       validatedFields.data.currencyPair,
       validatedFields.data.timeframe
     );
-    const signal = await generateTradeSignal({ ...validatedFields.data, marketData });
+    const signal = await generateTradeSignal({ ...validatedFields.data, marketData: latest });
     
     if (signal) {
         const message = formatSignalMessage(signal, validatedFields.data.currencyPair, validatedFields.data.timeframe, source);
@@ -43,7 +51,9 @@ export async function generateSignalAction(formData: FormData) {
         }
     }
 
-    return { data: signal, source };
+    const response: GenerateSignalSuccess = { signal, source, series };
+    return { data: response };
+
   } catch (error) {
     console.error("Error generating trade signal:", error);
     return {

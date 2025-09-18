@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -33,7 +34,8 @@ import { useToast } from "@/hooks/use-toast";
 import { CURRENCY_PAIRS, TIMEFRAMES } from "@/lib/constants";
 import type { TradeSignal, TradeHistoryEntry } from "@/lib/types";
 import { cn, formatDate } from "@/lib/utils";
-import type { MarketDataSource } from "@/services/market-data";
+import type { MarketDataSource, MarketDataSeries } from "@/services/market-data";
+import MarketChart from "./market-chart";
 
 const formSchema = z.object({
   currencyPair: z.string().min(1, "Currency pair is required."),
@@ -50,6 +52,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSignal, setGeneratedSignal] = useState<TradeSignal | null>(null);
   const [dataSource, setDataSource] = useState<MarketDataSource | null>(null);
+  const [marketSeries, setMarketSeries] = useState<MarketDataSeries | null>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -64,6 +67,8 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     setIsLoading(true);
     setGeneratedSignal(null);
     setDataSource(null);
+    setMarketSeries(null);
+
     const formData = new FormData();
     Object.entries(values).forEach(([key, value]) => {
       formData.append(key, value);
@@ -82,18 +87,19 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         description: result.error,
       });
     } else if (result.data) {
-      setGeneratedSignal(result.data);
-      setDataSource(result.source ?? null);
+      setGeneratedSignal(result.data.signal);
+      setDataSource(result.data.source ?? null);
+      setMarketSeries(result.data.series ?? null);
       
-      let toastDescription = `A new ${result.data.signal} signal for ${values.currencyPair} has been generated and sent.`;
-      if (result.source === 'mock') {
+      let toastDescription = `A new ${result.data.signal.signal} signal for ${values.currencyPair} has been generated and sent.`;
+      if (result.data.source === 'mock') {
         toastDescription += " (Using MOCK data)";
       }
 
       toast({
         title: "Signal Generated",
         description: toastDescription,
-        variant: result.source === 'mock' ? 'destructive' : 'default',
+        variant: result.data.source === 'mock' ? 'destructive' : 'default',
       });
       
       const historyEntry: TradeHistoryEntry = {
@@ -101,7 +107,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         timestamp: formatDate(new Date()),
         currencyPair: values.currencyPair,
         timeframe: values.timeframe,
-        signal: result.data,
+        signal: result.data.signal,
         status: 'open',
       };
       addTradeToHistory(historyEntry);
@@ -109,85 +115,107 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-      <Card>
-        <CardHeader>
-          <CardTitle>Generate Trade Signal</CardTitle>
-          <CardDescription>
-            Select a currency pair and timeframe. Risk settings are applied from the Risk Settings page.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="currencyPair"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Currency Pair</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a pair" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {CURRENCY_PAIRS.map((pair) => (
-                            <SelectItem key={pair} value={pair}>{pair}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="timeframe"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Timeframe</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a timeframe" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {TIMEFRAMES.map((tf) => (
-                            <SelectItem key={tf} value={tf}>{tf}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="lg:col-span-1 space-y-8">
+            <Card>
+                <CardHeader>
+                <CardTitle>Generate Trade Signal</CardTitle>
+                <CardDescription>
+                    Select a pair and timeframe. The chart will update and a signal will be generated.
+                </CardDescription>
+                </CardHeader>
+                <CardContent>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField
+                        control={form.control}
+                        name="currencyPair"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Currency Pair</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a pair" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                {CURRENCY_PAIRS.map((pair) => (
+                                    <SelectItem key={pair} value={pair}>{pair}</SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="timeframe"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Timeframe</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a timeframe" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                {TIMEFRAMES.map((tf) => (
+                                    <SelectItem key={tf} value={tf}>{tf}</SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
 
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Generate Signal
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-      
-      <div className="sticky top-8">
-        {isLoading && (
-            <Card className="flex items-center justify-center p-10">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="ml-4 text-lg">Generating Signal...</p>
+                    <Button type="submit" disabled={isLoading} className="w-full">
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Generate Signal
+                    </Button>
+                    </form>
+                </Form>
+                </CardContent>
             </Card>
-        )}
-        {generatedSignal && (
-            <div className="animate-in fade-in-50 duration-500">
-                <GeneratedSignalCard signal={generatedSignal} inputs={form.getValues()} dataSource={dataSource} />
+
+            <div className="sticky top-8">
+                {isLoading && (
+                    <Card className="flex items-center justify-center p-10 lg:hidden">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="ml-4 text-lg">Generating...</p>
+                    </Card>
+                )}
+                {generatedSignal && (
+                    <div className="animate-in fade-in-50 duration-500">
+                        <GeneratedSignalCard signal={generatedSignal} inputs={form.getValues()} dataSource={dataSource} />
+                    </div>
+                )}
             </div>
-        )}
+        </div>
+        
+        <div className="lg:col-span-2">
+            <Card className="h-[400px] lg:h-full">
+                 <CardContent className="h-full p-2">
+                    {isLoading && !marketSeries && (
+                        <div className="h-full flex flex-col items-center justify-center">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            <p className="ml-4 text-lg mt-4">Fetching Market Data...</p>
+                        </div>
+                    )}
+                    {marketSeries ? (
+                        <MarketChart data={marketSeries} />
+                    ) : (
+                        !isLoading && <div className="h-full flex items-center justify-center"><p className="text-muted-foreground">Generate a signal to see market data.</p></div>
+                    )}
+                 </CardContent>
+            </Card>
+        </div>
       </div>
     </div>
   );

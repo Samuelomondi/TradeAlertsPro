@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates trade signals using a GenAI model based on a currency pair and timeframe.
@@ -8,7 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {MarketData, MarketDataSchema} from '@/services/market-data';
+import {LatestIndicators, LatestIndicatorsSchema} from '@/services/market-data';
 import {z} from 'genkit';
 import { confirmTradeSignal } from './confirmations-gen-ai';
 
@@ -17,7 +18,7 @@ const TradeSignalInputSchema = z.object({
   timeframe: z.string().describe('The timeframe for analysis (e.g., 1H, 4H, 1D).'),
   accountBalance: z.number().describe('The account balance for risk calculation.'),
   riskPercentage: z.number().describe('The risk percentage for lot size calculation.'),
-  marketData: MarketDataSchema,
+  marketData: LatestIndicatorsSchema,
 });
 
 export type TradeSignalInput = z.infer<typeof TradeSignalInputSchema>;
@@ -41,7 +42,7 @@ export async function generateTradeSignal(input: TradeSignalInput): Promise<Trad
 
 const prompt = ai.definePrompt({
   name: 'tradeSignalPrompt',
-  input: {schema: z.intersection(TradeSignalInputSchema.omit({marketData: true}), MarketDataSchema)},
+  input: {schema: z.intersection(TradeSignalInputSchema.omit({marketData: true}), LatestIndicatorsSchema)},
   output: {schema: TradeSignalOutputSchema.omit({ macdConfirmation: true, bollingerConfirmation: true })},
   prompt: `You are an expert trading signal generator.
 Analyze the provided technical indicator values for the given currency pair and timeframe to create a trade signal.
