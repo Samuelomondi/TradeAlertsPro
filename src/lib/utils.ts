@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { TradeSignal } from "./types";
+import type { MarketDataSource } from "@/services/market-data";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -19,18 +20,21 @@ export function formatDate(date: Date) {
     }) + ' UTC';
 }
 
-export function formatSignalMessage(signal: TradeSignal, currencyPair: string, timeframe: string): string {
+export function formatSignalMessage(signal: TradeSignal, currencyPair: string, timeframe: string, source: MarketDataSource): string {
     const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
+    const sourceIndicator = source === 'live' ? '✅' : '⚠️';
 
     return `
-*${currencyPair}*
-*Timeframe:* ${timeframe}
-*Generated:* ${formatDate(new Date())}
-*Trend:* ${signal.trend}
+*${currencyPair}* (${timeframe})
 *Signal:* ${signal.signal === 'Buy' ? '📈' : '📉'} ${signal.signal}
 *Entry:* ${signal.entry.toFixed(5)}
-*SL:* ${signal.stopLoss.toFixed(5)} | *TP:* ${signal.takeProfit.toFixed(5)}
+*SL:* ${signal.stopLoss.toFixed(5)}
+*TP:* ${signal.takeProfit.toFixed(5)}
 *RRR:* ${rrr}
+---
+*Trend:* ${signal.trend}
 *Confirmations:* MACD ${signal.macdConfirmation ? '✅' : '❌'}, Bollinger ${signal.bollingerConfirmation ? '✅' : '❌'}
-    `.trim();
+*Data Source:* ${source.toUpperCase()} ${sourceIndicator}
+*Generated:* ${formatDate(new Date())}
+    `.trim().replace(/---/g, '----------------------------------------');
 }

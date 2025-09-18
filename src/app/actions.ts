@@ -31,7 +31,7 @@ export async function generateSignalAction(formData: FormData) {
     const signal = await generateTradeSignal({ ...validatedFields.data, marketData });
     
     if (signal) {
-        const message = formatSignalMessage(signal, validatedFields.data.currencyPair, validatedFields.data.timeframe);
+        const message = formatSignalMessage(signal, validatedFields.data.currencyPair, validatedFields.data.timeframe, source);
         try {
             await sendTelegramMessage(message);
         } catch (telegramError) {
