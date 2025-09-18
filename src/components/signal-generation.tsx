@@ -105,6 +105,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
             timeframe: values.timeframe,
             signal: result.data.signal,
             status: 'open',
+            source: result.data.source,
         };
         addTradeToHistory(historyEntry);
     }
