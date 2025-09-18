@@ -129,10 +129,12 @@ export async function runBacktestAction(formData: FormData): Promise<{ data?: Ba
 
         let wins = 0;
         let losses = 0;
-        let totalWinAmount = 0;
-        let totalLossAmount = 0;
+        let netProfit = 0;
         let activeTrade: { signal: TradeSignalOutput, type: 'Buy' | 'Sell' } | null = null;
         
+        const pipValue = 10; // Value of 1 pip for a standard lot
+        const pipMultiplier = currencyPair.includes('JPY') ? 100 : 10000;
+
         for (let i = 1; i < historicalData.length; i++) {
             const currentCandle = historicalData[i];
             const previousCandle = historicalData[i - 1];
@@ -140,53 +142,52 @@ export async function runBacktestAction(formData: FormData): Promise<{ data?: Ba
             // 1. Check if an active trade should be closed
             if (activeTrade) {
                 let tradeClosed = false;
+                let tradeProfit = 0;
+
                 if (activeTrade.type === 'Buy') {
+                    // Stop Loss Hit
                     if (currentCandle.low <= activeTrade.signal.stopLoss) {
-                        // Trade lost
                         losses++;
-                        const lossAmount = (activeTrade.signal.entry - activeTrade.signal.stopLoss) * 100000 * activeTrade.signal.lotSize; // Simplified pip calculation
-                        totalLossAmount += lossAmount;
+                        tradeProfit = (activeTrade.signal.stopLoss - activeTrade.signal.entry) * pipMultiplier * activeTrade.signal.lotSize * (pipValue / 10);
                         tradeClosed = true;
-                    } else if (currentCandle.high >= activeTrade.signal.takeProfit) {
-                        // Trade won
+                    } 
+                    // Take Profit Hit
+                    else if (currentCandle.high >= activeTrade.signal.takeProfit) {
                         wins++;
-                        const winAmount = (activeTrade.signal.takeProfit - activeTrade.signal.entry) * 100000 * activeTrade.signal.lotSize;
-                        totalWinAmount += winAmount;
+                        tradeProfit = (activeTrade.signal.takeProfit - activeTrade.signal.entry) * pipMultiplier * activeTrade.signal.lotSize * (pipValue / 10);
                         tradeClosed = true;
                     }
                 } else { // Sell trade
+                    // Stop Loss Hit
                     if (currentCandle.high >= activeTrade.signal.stopLoss) {
-                        // Trade lost
                         losses++;
-                        const lossAmount = (activeTrade.signal.stopLoss - activeTrade.signal.entry) * 100000 * activeTrade.signal.lotSize;
-                        totalLossAmount += lossAmount;
+                        tradeProfit = (activeTrade.signal.entry - activeTrade.signal.stopLoss) * pipMultiplier * activeTrade.signal.lotSize * (pipValue / 10);
                         tradeClosed = true;
-                    } else if (currentCandle.low <= activeTrade.signal.takeProfit) {
-                        // Trade won
+                    } 
+                    // Take Profit Hit
+                    else if (currentCandle.low <= activeTrade.signal.takeProfit) {
                         wins++;
-                        const winAmount = (activeTrade.signal.entry - activeTrade.signal.takeProfit) * 100000 * activeTrade.signal.lotSize;
-                        totalWinAmount += winAmount;
+                        tradeProfit = (activeTrade.signal.entry - activeTrade.signal.takeProfit) * pipMultiplier * activeTrade.signal.lotSize * (pipValue / 10);
                         tradeClosed = true;
                     }
                 }
                 if (tradeClosed) {
+                    netProfit += tradeProfit;
                     activeTrade = null;
                 }
             }
 
             // 2. Check if a new trade should be opened (only if no trade is active)
             if (!activeTrade) {
-                 const marketDataForSignal: HistoricalDataPoint = {
-                    ...previousCandle,
-                    currentPrice: previousCandle.currentPrice, // Use previous close as current price for signal
-                };
-                
                 const signal = await generateTradeSignal({
                     currencyPair,
                     timeframe,
                     accountBalance,
                     riskPercentage,
-                    marketData: marketDataForSignal
+                    marketData: {
+                        ...previousCandle,
+                        currentPrice: previousCandle.currentPrice
+                    }
                 });
 
                 if (signal.signal === 'Buy' || signal.signal === 'Sell') {
@@ -197,8 +198,9 @@ export async function runBacktestAction(formData: FormData): Promise<{ data?: Ba
         
         const totalTrades = wins + losses;
         const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
-        const netProfit = totalWinAmount - totalLossAmount;
-        
+        const totalWinAmount = wins > 0 ? netProfit / wins : 0; // Simplified for display
+        const totalLossAmount = losses > 0 ? netProfit / losses : 0; // Simplified for display
+
         const results: BacktestResults = {
             currencyPair,
             timeframe,
@@ -208,7 +210,7 @@ export async function runBacktestAction(formData: FormData): Promise<{ data?: Ba
             winRate,
             netProfit,
             avgWin: wins > 0 ? totalWinAmount / wins : 0,
-            avgLoss: losses > 0 ? totalLossAmount / losses : 0,
+            avgLoss: losses > 0 ? Math.abs(totalLossAmount / losses) : 0,
             barsAnalyzed: historicalData.length
         };
 
