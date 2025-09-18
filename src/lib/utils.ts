@@ -21,20 +21,26 @@ export function formatDate(date: Date) {
 
 export function formatSignalMessage(signal: TradeSignal, currencyPair: string, timeframe: string, source: MarketDataSource): string {
     const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
-    const sourceIndicator = source === 'live' ? '✅' : '⚠️';
+    const sourceIndicator = source === 'live' ? '✅ Live' : '⚠️ Mock';
+    const signalEmoji = signal.signal === 'Buy' ? '📈' : '📉';
 
     return `
-*${currencyPair}* (${timeframe})
-*Signal:* ${signal.signal === 'Buy' ? '📈' : '📉'} ${signal.signal}
+*New Signal: ${currencyPair} (${timeframe})*
+*Direction:* ${signal.signal} ${signalEmoji}
+----------------------------------------
+- *Entry:* \`${signal.entry.toFixed(5)}\`
+- *Stop Loss:* \`${signal.stopLoss.toFixed(5)}\`
+- *Take Profit:* \`${signal.takeProfit.toFixed(5)}\`
+----------------------------------------
+*Risk/Reward Ratio:* ${rrr}
 *Lot Size:* ${signal.lotSize.toFixed(2)}
-*Entry:* ${signal.entry.toFixed(5)}
-*SL:* ${signal.stopLoss.toFixed(5)}
-*TP:* ${signal.takeProfit.toFixed(5)}
-*RRR:* ${rrr}
----
-*Trend:* ${signal.trend}
-*Confirmations:* MACD ${signal.macdConfirmation ? '✅' : '❌'}, Bollinger ${signal.bollingerConfirmation ? '✅' : '❌'}
-*Data Source:* ${source.toUpperCase()} ${sourceIndicator}
-*Generated:* ${formatDate(new Date())}
-    `.trim().replace(/---/g, '----------------------------------------');
+----------------------------------------
+*Analysis:*
+- *Trend:* ${signal.trend}
+- *MACD:* ${signal.macdConfirmation ? 'Confirmed ✅' : 'Divergent ❌'}
+- *Bollinger:* ${signal.bollingerConfirmation ? 'Confirmed ✅' : 'Divergent ❌'}
+- *Data:* ${sourceIndicator}
+
+*Generated: ${formatDate(new Date())}*
+    `.trim();
 }
