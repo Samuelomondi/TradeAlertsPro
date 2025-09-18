@@ -36,6 +36,7 @@ import NewsWarning from "./news-warning";
 import Help from "./help";
 
 import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
+import TradePerformance from "./trade-performance";
 
 type View = "signals" | "history" | "risk" | "info" | "market" | "news" | "help";
 
@@ -101,7 +102,12 @@ export default function Dashboard({ botInfo }: DashboardProps) {
                 <SidebarTrigger />
             </header>
             {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} />}
-            {activeView === 'history' && <TradeHistory history={history} updateTradeStatus={updateTradeStatus} clearHistory={clearHistory} deleteTrade={deleteTrade} />}
+            {activeView === 'history' && (
+                <div className="space-y-8">
+                    <TradePerformance history={history} />
+                    <TradeHistory history={history} updateTradeStatus={updateTradeStatus} clearHistory={clearHistory} deleteTrade={deleteTrade} />
+                </div>
+            )}
             {activeView === 'risk' && <RiskCalculator accountBalance={accountBalance} riskPercentage={riskPercentage} setAccountBalance={setAccountBalance} setRiskPercentage={setRiskPercentage} />}
             {activeView === 'info' && botInfo}
             {activeView === 'market' && <MarketHours />}
