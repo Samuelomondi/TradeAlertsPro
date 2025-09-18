@@ -8,6 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {getMarketData, MarketDataSchema} from '@/services/market-data';
 import {z} from 'genkit';
 
 const TradeSignalInputSchema = z.object({
@@ -35,23 +36,23 @@ export async function generateTradeSignal(input: TradeSignalInput): Promise<Trad
 
 const prompt = ai.definePrompt({
   name: 'tradeSignalPrompt',
-  input: {schema: TradeSignalInputSchema},
+  input: {schema: z.intersection(TradeSignalInputSchema, MarketDataSchema)},
   output: {schema: TradeSignalOutputSchema},
   prompt: `You are an expert trading signal generator.
-For the given currency pair and timeframe, first generate realistic, but hypothetical, values for the following technical indicators:
-- Current Price
-- EMA (20)
-- EMA (50)
-- RSI (14)
-- ATR (14)
-- MACD Histogram
-- Bollinger Upper Band
-- Bollinger Lower Band
-
-Then, analyze these generated indicator values to create a trade signal.
+Analyze the provided technical indicator values for the given currency pair and timeframe to create a trade signal.
 
 Currency Pair: {{{currencyPair}}}
 Timeframe: {{{timeframe}}}
+
+Technical Indicators:
+- Current Price: {{{currentPrice}}}
+- EMA (20): {{{ema20}}}
+- EMA (50): {{{ema50}}}
+- RSI (14): {{{rsi}}}
+- ATR (14): {{{atr}}}
+- MACD Histogram: {{{macdHistogram}}}
+- Bollinger Upper Band: {{{bollingerUpper}}}
+- Bollinger Lower Band: {{{bollingerLower}}}
 
 Your analysis should consider the following:
 - Trend: Determine the trend based on EMA crossovers (20 above 50 is bullish, 20 below 50 is bearish).
@@ -76,7 +77,11 @@ const generateTradeSignalFlow = ai.defineFlow(
     outputSchema: TradeSignalOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    // Fetch market data from the service
+    const marketData = await getMarketData(input.currencyPair, input.timeframe);
+
+    // Combine input and market data to call the prompt
+    const {output} = await prompt({...input, ...marketData});
     return output!;
   }
 );

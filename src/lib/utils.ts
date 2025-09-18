@@ -28,8 +28,8 @@ export function formatSignalMessage(signal: TradeSignal, currencyPair: string, t
 *Generated:* ${formatDate(new Date())}
 *Trend:* ${signal.trend}
 *Signal:* ${signal.signal === 'Buy' ? '📈' : '📉'} ${signal.signal}
-*Entry:* ${signal.entry.toFixed(4)}
-*SL:* ${signal.stopLoss.toFixed(4)} | *TP:* ${signal.takeProfit.toFixed(4)}
+*Entry:* ${signal.entry.toFixed(5)}
+*SL:* ${signal.stopLoss.toFixed(5)} | *TP:* ${signal.takeProfit.toFixed(5)}
 *RRR:* ${rrr}
 *Confirmations:* MACD ${signal.macdConfirmation ? '✅' : '❌'}, Bollinger ${signal.bollingerConfirmation ? '✅' : '❌'}
     `.trim();
