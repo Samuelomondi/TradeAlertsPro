@@ -10,6 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {MarketData, MarketDataSchema} from '@/services/market-data';
 import {z} from 'genkit';
+import { confirmTradeSignal } from './confirmations-gen-ai';
 
 const TradeSignalInputSchema = z.object({
   currencyPair: z.string().describe('The currency pair to analyze (e.g., EUR/USD).'),
@@ -41,7 +42,7 @@ export async function generateTradeSignal(input: TradeSignalInput): Promise<Trad
 const prompt = ai.definePrompt({
   name: 'tradeSignalPrompt',
   input: {schema: z.intersection(TradeSignalInputSchema.omit({marketData: true}), MarketDataSchema)},
-  output: {schema: TradeSignalOutputSchema},
+  output: {schema: TradeSignalOutputSchema.omit({ macdConfirmation: true, bollingerConfirmation: true })},
   prompt: `You are an expert trading signal generator.
 Analyze the provided technical indicator values for the given currency pair and timeframe to create a trade signal.
 
@@ -63,17 +64,13 @@ Technical Indicators:
 Your analysis should consider the following:
 - Trend: Determine the trend based on EMA crossovers (20 above 50 is bullish, 20 below 50 is bearish).
 - RSI:  Over 70 is overbought, below 30 is oversold.
-- MACD: Use the MACD Histogram to confirm the signal. (Positive values indicate bullish momentum, negative values indicate bearish momentum.)
-- Bollinger Bands: Use Bollinger Bands to confirm potential overbought or oversold conditions.
 
 Based on this analysis, provide:
 - Trend (Bullish, Bearish, or Neutral)
 - Signal (Buy, Sell, or Hold)
-- Entry Price
-- Stop Loss Price
-- Take Profit Price
-- macdConfirmation (true/false): meets predefined conditions
-- bollingerConfirmation (true/false): meets predefined conditions
+- Entry Price (Based on current price and trend)
+- Stop Loss Price (Use ATR to set a logical stop loss)
+- Take Profit Price (Aim for at least a 1.5:1 risk/reward ratio)
 
 Finally, calculate the lot size for the trade. Assume a standard pip value of $10 per lot.
 The formula is: Lot Size = (Account Balance * (Risk Percentage / 100)) / (Stop Loss in Pips * Pip Value)
@@ -93,7 +90,26 @@ const generateTradeSignalFlow = ai.defineFlow(
       ...input.marketData,
     };
 
-    const {output} = await prompt(combinedInput);
-    return output!;
+    // Generate the core trade signal first
+    const {output: coreSignal} = await prompt(combinedInput);
+    if (!coreSignal) {
+        throw new Error("Failed to generate core trade signal.");
+    }
+
+    // Now, get the confirmations from the specialized agent
+    const macdCondition = `Histogram is ${coreSignal.trend === 'Bullish' ? 'positive' : 'negative'}`;
+    const bollingerCondition = `Price is ${coreSignal.signal === 'Buy' ? 'near lower band' : 'near upper band'}`;
+
+    const confirmations = await confirmTradeSignal({
+        macdCondition,
+        bollingerCondition,
+    });
+    
+    // Combine the results
+    return {
+        ...coreSignal,
+        macdConfirmation: confirmations.macdConfirmation,
+        bollingerConfirmation: confirmations.bollingerConfirmation,
+    };
   }
 );
