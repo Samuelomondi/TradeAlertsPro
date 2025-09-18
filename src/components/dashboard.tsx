@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BarChart2,
   Settings,
@@ -38,11 +39,34 @@ import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
 
 type View = "signals" | "history" | "risk" | "info" | "market" | "news" | "help";
 
+const TRADE_HISTORY_STORAGE_KEY = "tradeHistory";
+
 export default function Dashboard() {
   const [activeView, setActiveView] = useState<View>("signals");
   const [history, setHistory] = useState<TradeHistoryEntry[]>([]);
   const [accountBalance, setAccountBalance] = useState(10000);
   const [riskPercentage, setRiskPercentage] = useState(1);
+
+  // Load history from localStorage on initial client-side render
+  useEffect(() => {
+    try {
+      const savedHistory = localStorage.getItem(TRADE_HISTORY_STORAGE_KEY);
+      if (savedHistory) {
+        setHistory(JSON.parse(savedHistory));
+      }
+    } catch (error) {
+      console.error("Failed to parse trade history from localStorage", error);
+    }
+  }, []);
+
+  // Save history to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(TRADE_HISTORY_STORAGE_KEY, JSON.stringify(history));
+    } catch (error) {
+      console.error("Failed to save trade history to localStorage", error);
+    }
+  }, [history]);
 
   const addTradeToHistory = (entry: TradeHistoryEntry) => {
     setHistory((prev) => [entry, ...prev]);
