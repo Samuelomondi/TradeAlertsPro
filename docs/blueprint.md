@@ -3,9 +3,9 @@
 ## Core Features:
 
 - Signal Generation: Use EMA, RSI, ATR, MACD, and Bollinger Bands to generate trade signals.
-- Telegram Integration: Send trade signals via Telegram bot to the specified chat ID. Use token '8266783870:AAFSZzVpmeLykifAq1lLp5vS_rgz-_USiGA' and chat ID '531957996'.
+- Telegram Integration: Send trade signals via Telegram bot to the specified chat ID.
 - Currency Pair Monitoring: Monitor specified currency pairs (EUR/USD, GBP/USD, USD/JPY, USD/CAD) for trade opportunities.
-- Risk Calculation: Provide risk calculation based on ATR and user-defined risk parameters. Allow users to upload/manage 'Server: MetaQuotes-Demo Login: 96469776 Password: R*VrF2Hz' (Note: Do not save in database).
+- Risk Calculation: Provide risk calculation based on ATR and user-defined risk parameters. 
 - Message Formatting: Format trade signals into a clear message with Trend, RSI, Signal, Entry, SL, TP, RRR, Size, and Confirmations.
 - Confirmation Tool: An LLM will reason whether MACD & Bollinger bands meet predefined conditions and display green checkmarks based on results.
 - UI Buttons: Enable users to trigger key functionality in the UI using Telegram buttons.
