@@ -32,6 +32,7 @@ type TradeHistoryProps = {
   history: TradeHistoryEntry[];
   updateTradeStatus: (id: string, status: TradeStatus) => void;
   clearHistory: () => void;
+  deleteTrade: (id: string) => void;
 };
 
 const statusConfig = {
@@ -41,7 +42,7 @@ const statusConfig = {
 };
 
 
-export default function TradeHistory({ history, updateTradeStatus, clearHistory }: TradeHistoryProps) {
+export default function TradeHistory({ history, updateTradeStatus, clearHistory, deleteTrade }: TradeHistoryProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -124,6 +125,23 @@ export default function TradeHistory({ history, updateTradeStatus, clearHistory 
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-green-500 hover:bg-green-100 hover:text-green-600" title="Mark as Won" onClick={() => updateTradeStatus(trade.id, 'won')}><Check /></Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:bg-red-100 hover:text-red-600" title="Mark as Lost" onClick={() => updateTradeStatus(trade.id, 'lost')}><X /></Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-gray-600" title="Reset to Open" onClick={() => updateTradeStatus(trade.id, 'open')}><RotateCcw /></Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/70 hover:bg-destructive/10 hover:text-destructive" title="Delete Trade"><Trash2 /></Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete this trade?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete this trade from your history.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteTrade(trade.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                         </div>
                     </TableCell>
                     </TableRow>

@@ -84,6 +84,10 @@ export default function Dashboard({ botInfo }: DashboardProps) {
     setHistory([]);
   };
 
+  const deleteTrade = (id: string) => {
+    setHistory(prev => prev.filter(trade => trade.id !== id));
+  };
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
@@ -97,7 +101,7 @@ export default function Dashboard({ botInfo }: DashboardProps) {
                 <SidebarTrigger />
             </header>
             {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} />}
-            {activeView === 'history' && <TradeHistory history={history} updateTradeStatus={updateTradeStatus} clearHistory={clearHistory} />}
+            {activeView === 'history' && <TradeHistory history={history} updateTradeStatus={updateTradeStatus} clearHistory={clearHistory} deleteTrade={deleteTrade} />}
             {activeView === 'risk' && <RiskCalculator accountBalance={accountBalance} riskPercentage={riskPercentage} setAccountBalance={setAccountBalance} setRiskPercentage={setRiskPercentage} />}
             {activeView === 'info' && botInfo}
             {activeView === 'market' && <MarketHours />}
