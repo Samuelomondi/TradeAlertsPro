@@ -13,7 +13,6 @@ import {
   Rss,
   TriangleAlert,
   Waves,
-  Beaker,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -35,11 +34,10 @@ import RiskCalculator from "./risk-calculator";
 import MarketHours from "./market-hours";
 import NewsWarning from "./news-warning";
 import Help from "./help";
-import Backtester from "./backtester";
 
 import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
 
-type View = "signals" | "history" | "risk" | "info" | "market" | "news" | "help" | "backtester";
+type View = "signals" | "history" | "risk" | "info" | "market" | "news" | "help";
 
 const TRADE_HISTORY_STORAGE_KEY = "tradeHistory";
 
@@ -101,7 +99,6 @@ export default function Dashboard({ botInfo }: DashboardProps) {
             {activeView === 'market' && <MarketHours />}
             {activeView === 'news' && <NewsWarning />}
             {activeView === 'help' && <Help />}
-            {activeView === 'backtester' && <Backtester accountBalance={accountBalance} riskPercentage={riskPercentage} />}
         </main>
       </div>
     </SidebarProvider>
@@ -115,7 +112,6 @@ function AppSidebar({ activeView, setActiveView }: { activeView: View; setActive
     { id: "signals", label: "Show Signals", icon: BarChart2 },
     { id: "history", label: "Trade History", icon: History },
     { id: "risk", label: "Risk Settings", icon: Calculator },
-    { id: "backtester", label: "Backtester", icon: Beaker },
     { id: "info", label: "System Status", icon: Settings },
     { id: "news", label: "News Warning", icon: TriangleAlert },
     { id: "market", label: "Market Hours", icon: Clock },

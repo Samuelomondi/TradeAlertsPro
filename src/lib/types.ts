@@ -13,16 +13,3 @@ export type TradeHistoryEntry = {
     signal: TradeSignal;
     status: TradeStatus;
 };
-
-export type BacktestResults = {
-    currencyPair: string;
-    timeframe: string;
-    totalTrades: number;
-    wins: number;
-    losses: number;
-    winRate: number;
-    netProfit: number;
-    avgWin: number;
-    avgLoss: number;
-    barsAnalyzed: number;
-};

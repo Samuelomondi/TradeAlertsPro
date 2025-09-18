@@ -14,14 +14,6 @@ export const LatestIndicatorsSchema = z.object({
   bollingerLower: z.number(),
 });
 
-// Schema for historical data points used in backtesting
-const HistoricalDataPointSchema = LatestIndicatorsSchema.extend({
-    time: z.string(),
-    high: z.number(),
-    low: z.number(),
-});
-
-export type HistoricalDataPoint = z.infer<typeof HistoricalDataPointSchema>;
 export type LatestIndicators = z.infer<typeof LatestIndicatorsSchema>;
 export type MarketDataSource = 'live' | 'mock';
 
@@ -137,68 +129,6 @@ export async function getMarketData(
      const { latest } = generateMockMarketData(currencyPair);
      return { latest, source: 'mock' };
   }
-}
-
-export async function getHistoricalData(currencyPair: string, timeframe: string, outputSize = 50): Promise<HistoricalDataPoint[]> {
-    if (!API_KEY || API_KEY.startsWith("YOUR_")) {
-        throw new Error(`Twelve Data API key is not configured. Historical data cannot be fetched.`);
-    }
-
-    const intervalMap: { [key: string]: string } = {
-        '1M': '1min', '5M': '5min', '15M': '15min', '30M': '30min', '1H': '1h', '4H': '4h', '1D': '1day', '1W': '1week'
-    };
-    const interval = intervalMap[timeframe] || '1h';
-    
-    // EMA50 is the longest lookback period, so fetch extra data to allow it to "warm up"
-    const requiredWarmup = 50; 
-    const apiOutputSize = outputSize + requiredWarmup;
-
-    const indicators = [
-        "ema:time_period_20",
-        "ema:time_period_50",
-        "rsi:time_period_14",
-        "atr:time_period_14",
-        "macd:fast_period_12,slow_period_26,signal_period_9",
-        "bbands:time_period_20,sd_2"
-    ].join(',');
-
-    const params = { 
-        symbol: currencyPair, 
-        interval, 
-        dp: '5', 
-        timezone: 'UTC', 
-        outputsize: String(apiOutputSize),
-        order: 'ASC', // Fetch oldest first
-        technical_indicators: indicators
-    };
-
-    const data = await fetchTwelveData('time_series', params);
-
-    const historicalPoints: HistoricalDataPoint[] = data.values.map((point: any) => ({
-        time: point.datetime,
-        currentPrice: parseFloat(point.close),
-        high: parseFloat(point.high),
-        low: parseFloat(point.low),
-        ema20: point.ema_20 ? parseFloat(point.ema_20) : undefined,
-        ema50: point.ema_50 ? parseFloat(point.ema_50) : undefined,
-        rsi: point.rsi ? parseFloat(point.rsi) : undefined,
-        atr: point.atr ? parseFloat(point.atr) : undefined,
-        macdHistogram: point.macd_hist ? parseFloat(point.macd_hist) : undefined,
-        bollingerUpper: point.upper_band ? parseFloat(point.upper_band) : undefined,
-        bollingerLower: point.lower_band ? parseFloat(point.lower_band) : undefined,
-    })).filter((p: any) => 
-        // Filter out initial data points where indicators might not have a value yet
-        p.ema20 !== undefined && 
-        p.ema50 !== undefined && 
-        p.rsi !== undefined && 
-        p.atr !== undefined && 
-        p.macdHistogram !== undefined && 
-        p.bollingerUpper !== undefined && 
-        p.bollingerLower !== undefined
-    ) as HistoricalDataPoint[];
-    
-    // Ensure we return the correct number of points after filtering
-    return historicalPoints.slice(-outputSize);
 }
 
 /**
