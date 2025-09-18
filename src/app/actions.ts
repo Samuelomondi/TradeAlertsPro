@@ -50,3 +50,19 @@ export async function generateSignalAction(formData: FormData) {
     };
   }
 }
+
+export type ServiceStatus = 'Configured' | 'Not Configured';
+
+export interface SystemStatus {
+  gemini: ServiceStatus;
+  twelveData: ServiceStatus;
+  telegram: ServiceStatus;
+}
+
+export async function getSystemStatus(): Promise<SystemStatus> {
+    return {
+        gemini: process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "YOUR_GEMINI_API_KEY" ? 'Configured' : 'Not Configured',
+        twelveData: process.env.TWELVE_DATA_API_KEY && process.env.TWELVE_DATA_API_KEY !== "YOUR_TWELVE_DATA_API_KEY" ? 'Configured' : 'Not Configured',
+        telegram: process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN !== "YOUR_TELEGRAM_BOT_TOKEN" ? 'Configured' : 'Not Configured'
+    };
+}
