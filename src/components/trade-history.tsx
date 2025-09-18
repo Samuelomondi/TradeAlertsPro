@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ArrowDown, Check, X, RotateCcw, CheckCircle, XCircle, Trash2, TriangleAlert } from "lucide-react";
+import { ArrowUp, ArrowDown, Check, X, RotateCcw, CheckCircle, XCircle, Trash2, TriangleAlert, Pause } from "lucide-react";
 import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
@@ -42,6 +42,21 @@ const statusConfig = {
     won: { variant: "default", className: "bg-green-600 hover:bg-green-700", label: "Won"},
     lost: { variant: "destructive", label: "Lost" },
 };
+
+const signalStyles = {
+    Buy: {
+        color: 'text-green-600',
+        icon: ArrowUp
+    },
+    Sell: {
+        color: 'text-red-600',
+        icon: ArrowDown
+    },
+    Hold: {
+        color: 'text-blue-600',
+        icon: Pause
+    }
+}
 
 
 export default function TradeHistory({ history, updateTradeStatus, clearHistory, deleteTrade }: TradeHistoryProps) {
@@ -102,14 +117,16 @@ export default function TradeHistory({ history, updateTradeStatus, clearHistory,
                     ) : (
                     history.map((trade) => {
                         const config = statusConfig[trade.status];
+                        const styles = signalStyles[trade.signal.signal as keyof typeof signalStyles] || signalStyles.Hold;
+                        const Icon = styles.icon;
                         return (
                             <TableRow key={trade.id}>
                             <TableCell className="text-xs">{trade.timestamp}</TableCell>
                             <TableCell>{trade.currencyPair}<br/><span className="text-xs text-muted-foreground">{trade.timeframe}</span></TableCell>
                             <TableCell>
-                                <div className={`flex items-center gap-2 ${trade.signal.signal === 'Buy' ? 'text-green-600' : 'text-red-600'}`}>
-                                {trade.signal.signal === 'Buy' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
-                                {trade.signal.signal}
+                                <div className={cn('flex items-center gap-2', styles.color)}>
+                                    <Icon className="h-4 w-4" />
+                                    {trade.signal.signal}
                                 </div>
                             </TableCell>
                             <TableCell>{trade.signal.entry.toFixed(5)}</TableCell>
@@ -194,3 +211,5 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
         </Tooltip>
     );
 };
+
+    

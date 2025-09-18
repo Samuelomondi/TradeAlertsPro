@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, CheckCircle, XCircle, ArrowUp, ArrowDown, TriangleAlert, History, Minus } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, ArrowUp, ArrowDown, TriangleAlert, History, Minus, Pause } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CURRENCY_PAIRS, TIMEFRAMES } from "@/lib/constants";
 import type { TradeSignal, TradeHistoryEntry, TradeStatus } from "@/lib/types";
@@ -277,6 +277,24 @@ const statusConfig: { [key in TradeStatus]: { variant: "secondary" | "default" |
     lost: { variant: "destructive", label: "Lost" },
 };
 
+const signalStyles = {
+    Buy: {
+        card: "border-green-500",
+        title: "text-green-600",
+        icon: ArrowUp
+    },
+    Sell: {
+        card: "border-red-500",
+        title: "text-red-600",
+        icon: ArrowDown
+    },
+    Hold: {
+        card: "border-blue-500",
+        title: "text-blue-600",
+        icon: Pause
+    }
+}
+
 const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp, history, updateTradeStatus }: { 
     signal: TradeSignal, 
     inputs: FormValues, 
@@ -297,20 +315,23 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp, history, u
         const nextStatus = statusCycle[nextIndex];
         updateTradeStatus(timestamp, nextStatus);
     };
+
+    const styles = signalStyles[signal.signal as keyof typeof signalStyles] || signalStyles.Hold;
+    const Icon = styles.icon;
     
     return (
         <Card className={cn(
             "border-2 h-full",
-            signal.signal === 'Buy' ? "border-green-500" : "border-red-500"
+            styles.card
         )}>
             <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                     <span>{inputs.currencyPair} Signal</span>
                     <span className={cn(
                         "text-2xl font-bold flex items-center gap-2",
-                        signal.signal === 'Buy' ? "text-green-600" : "text-red-600"
+                        styles.title
                     )}>
-                        {signal.signal === 'Buy' ? <ArrowUp /> : <ArrowDown /> }
+                        <Icon />
                         {signal.signal}
                     </span>
                 </CardTitle>
@@ -371,6 +392,12 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
         updateTradeStatus(trade.id, nextStatus);
     };
 
+    const signalIcon = (signal: string) => {
+        if (signal === 'Buy') return <ArrowUp className="w-5 h-5 text-green-500" />;
+        if (signal === 'Sell') return <ArrowDown className="w-5 h-5 text-red-500" />;
+        return <Pause className="w-5 h-5 text-blue-500" />;
+    };
+
 
     return (
         <Card>
@@ -390,7 +417,7 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
                              return (
                                 <div key={trade.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                                     <div className="flex items-center gap-3">
-                                        {trade.signal.signal === 'Buy' ? <ArrowUp className="w-5 h-5 text-green-500" /> : <ArrowDown className="w-5 h-5 text-red-500" />}
+                                        {signalIcon(trade.signal.signal)}
                                         <div>
                                             <p className="font-semibold">{trade.currencyPair} <span className="font-normal text-muted-foreground">({trade.timeframe})</span></p>
                                             <p className="text-xs text-muted-foreground">{trade.timestamp}</p>
@@ -446,5 +473,7 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
         </TooltipContent>
     </Tooltip>
 );
+
+    
 
     
