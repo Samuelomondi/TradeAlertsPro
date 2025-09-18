@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -127,7 +126,7 @@ function AppSidebar({ activeView, setActiveView }: { activeView: View; setActive
     { id: "signals", label: "Show Signals", icon: BarChart2 },
     { id: "history", label: "Trade History", icon: History },
     { id: "risk", label: "Risk Settings", icon: Calculator },
-    { id: "info", label: "System Status", icon: Settings },
+    { id: "info", label: "App Settings", icon: Settings },
     { id: "news", label: "News Warning", icon: TriangleAlert },
     { id: "market", label: "Market Hours", icon: Clock },
     { id: "help", label: "Help", icon: HelpCircle },

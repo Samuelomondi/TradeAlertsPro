@@ -5,3 +5,14 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+
+# We don't need environment variables for this app since keys are managed on the client.
+# env:
+#   - variable: GEMINI_API_KEY
+#     secret: GEMINI_API_KEY
+#   - variable: TWELVE_DATA_API_KEY
+#     secret: TWELVE_DATA_API_KEY
+#   - variable: TELEGRAM_BOT_TOKEN
+#     secret: TELEGRAM_BOT_TOKEN
+#   - variable: TELEGRAM_CHAT_ID
+#     secret: TELEGRAM_CHAT_ID

@@ -1,6 +1,11 @@
-export async function sendTelegramMessage(message: string) {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+
+type TelegramConfig = {
+    botToken: string;
+    chatId: string;
+};
+
+export async function sendTelegramMessage(message: string, config: TelegramConfig) {
+  const { botToken, chatId } = config;
 
   if (!botToken || !chatId) {
     throw new Error("Telegram bot token or chat ID is not configured.");

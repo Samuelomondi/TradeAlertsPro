@@ -40,6 +40,7 @@ import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import MarketChart from "./market-chart";
 import { Separator } from "./ui/separator";
+import { useSettings } from "./settings-provider";
 
 
 const formSchema = z.object({
@@ -68,6 +69,7 @@ type StoredSignal = {
 const LAST_SIGNAL_STORAGE_KEY = 'lastGeneratedSignal';
 
 export default function SignalGeneration({ addTradeToHistory, accountBalance, riskPercentage, history, updateTradeStatus }: SignalGenerationProps) {
+  const { settings } = useSettings();
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSignal, setGeneratedSignal] = useState<TradeSignal | null>(null);
   const [dataSource, setDataSource] = useState<MarketDataSource | null>(null);
@@ -116,6 +118,12 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     });
     formData.append("accountBalance", String(accountBalance));
     formData.append("riskPercentage", String(riskPercentage));
+
+    // Pass API keys from settings
+    formData.append("geminiApiKey", settings.geminiApiKey || '');
+    formData.append("twelveDataApiKey", settings.twelveDataApiKey || '');
+    if (settings.telegramBotToken) formData.append("telegramBotToken", settings.telegramBotToken);
+    if (settings.telegramChatId) formData.append("telegramChatId", settings.telegramChatId);
 
 
     const result = await generateSignalAction(formData);
@@ -514,4 +522,3 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
         </Tooltip>
     );
 };
-    

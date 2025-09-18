@@ -32,17 +32,16 @@ export type MarketDataResponse = {
     source: MarketDataSource
 };
 
-const API_KEY = process.env.TWELVE_DATA_API_KEY;
 const BASE_URL = 'https://api.twelvedata.com';
 
 
 // Helper to make API calls to Twelve Data
-async function fetchTwelveData(endpoint: string, params: Record<string, string>) {
-  if (!API_KEY || API_KEY.startsWith("YOUR_")) {
-      throw new Error(`Twelve Data API key is not configured. Please add it to your environment variables.`);
+async function fetchTwelveData(endpoint: string, params: Record<string, string>, apiKey: string) {
+  if (!apiKey || apiKey.startsWith("YOUR_")) {
+      throw new Error(`Twelve Data API key is not configured.`);
   }
 
-  const query = new URLSearchParams({...params, apikey: API_KEY!}).toString();
+  const query = new URLSearchParams({...params, apikey: apiKey }).toString();
   const url = `${BASE_URL}/${endpoint}?${query}`;
   
   try {
@@ -82,14 +81,16 @@ function getMostRecentValue(data: any, key: string) {
  *
  * @param currencyPair The currency pair (e.g., 'EUR/USD').
  * @param timeframe The timeframe (e.g., '1H').
+ * @param apiKey The Twelve Data API key.
  * @returns A promise that resolves to the market data and its source.
  */
 export async function getMarketData(
   currencyPair: string,
-  timeframe: string
+  timeframe: string,
+  apiKey?: string
 ): Promise<MarketDataResponse> {
   // Clear check for API key before making any calls.
-  if (!API_KEY || API_KEY.startsWith("YOUR_")) {
+  if (!apiKey || apiKey.startsWith("YOUR_")) {
     console.warn('Twelve Data API key is not configured. Falling back to mock data.');
     const { latest, series } = generateMockMarketData(currencyPair);
     return { latest, series, source: 'mock' };
@@ -114,14 +115,14 @@ export async function getMarketData(
       bbandsData,
       timeSeriesData
     ] = await Promise.all([
-      fetchTwelveData('price', { ...commonParams }),
-      fetchTwelveData('ema', { ...commonParams, time_period: '20' }),
-      fetchTwelveData('ema', { ...commonParams, time_period: '50' }),
-      fetchTwelveData('rsi', { ...commonParams, time_period: '14' }),
-      fetchTwelveData('atr', { ...commonParams, time_period: '14' }),
-      fetchTwelveData('macd', { ...commonParams, fast_period: '12', slow_period: '26', signal_period: '9' }),
-      fetchTwelveData('bbands', { ...commonParams, time_period: '20', sd: '2' }),
-      fetchTwelveData('time_series', {...commonParams, outputsize})
+      fetchTwelveData('price', { ...commonParams }, apiKey),
+      fetchTwelveData('ema', { ...commonParams, time_period: '20' }, apiKey),
+      fetchTwelveData('ema', { ...commonParams, time_period: '50' }, apiKey),
+      fetchTwelveData('rsi', { ...commonParams, time_period: '14' }, apiKey),
+      fetchTwelveData('atr', { ...commonParams, time_period: '14' }, apiKey),
+      fetchTwelveData('macd', { ...commonParams, fast_period: '12', slow_period: '26', signal_period: '9' }, apiKey),
+      fetchTwelveData('bbands', { ...commonParams, time_period: '20', sd: '2' }, apiKey),
+      fetchTwelveData('time_series', {...commonParams, outputsize}, apiKey)
     ]);
 
     const latest: LatestIndicators = {

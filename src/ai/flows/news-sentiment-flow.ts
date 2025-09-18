@@ -1,3 +1,4 @@
+
 // This is a server-side file.
 'use server';
 
@@ -16,9 +17,11 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { configureGenkit } from '@/ai/genkit';
 
 const NewsSentimentInputSchema = z.object({
   currencyPair: z.string().describe('The currency pair to analyze (e.g., EUR/USD).'),
+  geminiApiKey: z.string().min(1, "A Gemini API Key is required"),
 });
 export type NewsSentimentInput = z.infer<typeof NewsSentimentInputSchema>;
 
@@ -34,7 +37,7 @@ export async function getNewsSentiment(input: NewsSentimentInput): Promise<NewsS
 
 const getNewsSentimentPrompt = ai.definePrompt({
   name: 'getNewsSentimentPrompt',
-  input: {schema: NewsSentimentInputSchema},
+  input: {schema: NewsSentimentInputSchema.omit({ geminiApiKey: true })},
   output: {schema: NewsSentimentOutputSchema},
   prompt: `You are a financial analyst specializing in forex markets. Your task is to analyze the most recent news and events related to the currency pair: {{{currencyPair}}}.
 
@@ -53,7 +56,8 @@ const getNewsSentimentFlow = ai.defineFlow(
     inputSchema: NewsSentimentInputSchema,
     outputSchema: NewsSentimentOutputSchema,
   },
-  async input => {
+  async (input) => {
+    const ai = configureGenkit(input.geminiApiKey);
     const {output} = await getNewsSentimentPrompt(input);
     return output!;
   }

@@ -1,9 +1,11 @@
+
 # TradeAlert
 
 TradeAlert is a web application designed to assist forex traders by generating trade signals using deterministic technical analysis. It provides a dashboard with tools for signal generation, a live market chart, risk management, trade history tracking, and a comprehensive sentiment analysis view with crucial market information. It also integrates with Telegram to send real-time signal notifications.
 
 ## Features
 
+- **On-Screen Setup**: No need to manage environment files. Enter your API keys for Gemini, Twelve Data, and Telegram directly into the application's settings page. Your keys are stored securely in your browser's local storage.
 - **Logic-Based Signal Generation**: Input a currency pair and timeframe to get a trade signal based on a consistent, deterministic set of rules. The system analyzes technical indicators (EMA, RSI, ATR) to generate a signal with an entry, stop loss, take profit, and a calculated lot size.
 - **Live Market Chart**: Each generated signal is accompanied by an interactive chart displaying recent price action and the EMA (20/50) indicators, providing immediate visual context for the trade signal.
 - **Telegram Notifications**: Automatically sends generated trade signals to a designated Telegram chat, allowing you to receive trade ideas on the go.
@@ -16,7 +18,6 @@ TradeAlert is a web application designed to assist forex traders by generating t
     - An AI-generated list of upcoming high-impact economic events.
     - An AI-powered sentiment analysis tool that scrapes recent news for a currency pair to determine if the market mood is Positive, Negative, or Neutral.
     - An overview of key market sentiment indicators.
-- **System Status Dashboard**: A utility panel that checks and displays the configuration status of all required services (Generative AI, Market Data API, Telegram), making it easy to diagnose setup issues.
 - **Built-in Help & FAQ**: An accordion-style FAQ section to answer common questions about how the application works.
 
 ## Tech Stack
@@ -36,7 +37,7 @@ TradeAlert is a web application designed to assist forex traders by generating t
 - [Node.js](https://nodejs.org/) (v18 or later)
 - An account with a Generative AI provider (e.g., Google AI Studio) to obtain an API key.
 - A [Twelve Data](https://twelvedata.com/) account for a market data API key.
-- A Telegram Bot and Chat ID for notifications.
+- A Telegram Bot and Chat ID for notifications (optional).
 
 ### Installation
 
@@ -50,22 +51,6 @@ TradeAlert is a web application designed to assist forex traders by generating t
     ```bash
     npm install
     ```
-
-### Environment Configuration
-
-Create a `.env` file in the root of the project and add the following variables. These are essential for the AI, market data, and Telegram functionalities.
-
-```
-# From your AI provider (e.g., Google AI Studio)
-GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
-
-# From Twelve Data (https://twelvedata.com/)
-TWELVE_DATA_API_KEY="YOUR_TWELVE_DATA_API_KEY"
-
-# From Telegram (create a bot with @BotFather)
-TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
-TELEGRAM_CHAT_ID="YOUR_TELEGRAM_CHAT_ID"
-```
 
 ### Running the Application
 
@@ -81,7 +66,7 @@ TELEGRAM_CHAT_ID="YOUR_TELEGRAM_CHAT_ID"
     npm run dev
     ```
 
-The application will be available at [http://localhost:9002](http://localhost:9002).
+The application will be available at [http://localhost:9002](http://localhost:9002). When you first open the app, you will be prompted to enter your API keys.
 
 ## How It Works
 
@@ -94,3 +79,5 @@ The application is structured into several key components:
 - **Configuration (`src/lib`)**: Contains constants, type definitions, and utility functions used throughout the application.
 
 ![final](https://storage.googleapis.com/aip-dev-user-id-0213ba43/46f6f96d-3575-4702-8d48-31628d7120a1.png)
+
+```

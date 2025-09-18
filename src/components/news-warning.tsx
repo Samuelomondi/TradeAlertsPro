@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { CURRENCY_PAIRS } from '@/lib/constants';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
+import { useSettings } from './settings-provider';
 
 const formatEventTime = (isoString: string) => {
   const date = new Date(isoString);
@@ -40,6 +41,7 @@ const sentimentColors = {
 }
 
 export default function NewsWarning() {
+  const { settings } = useSettings();
   const [events, setEvents] = useState<EconomicEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   
@@ -50,17 +52,20 @@ export default function NewsWarning() {
   useEffect(() => {
     async function fetchNews() {
       setIsLoadingEvents(true);
-      const newsEvents = await getNewsEventsAction();
+      const newsEvents = await getNewsEventsAction({ geminiApiKey: settings.geminiApiKey });
       setEvents(newsEvents);
       setIsLoadingEvents(false);
     }
     fetchNews();
-  }, []);
+  }, [settings.geminiApiKey]);
 
   const handleFetchSentiment = async () => {
     setIsLoadingSentiment(true);
     setSentiment(null);
-    const sentimentData = await getNewsSentimentAction(selectedPair);
+    const sentimentData = await getNewsSentimentAction({
+        currencyPair: selectedPair,
+        geminiApiKey: settings.geminiApiKey,
+    });
     setSentiment(sentimentData);
     setIsLoadingSentiment(false);
   }
@@ -169,7 +174,7 @@ export default function NewsWarning() {
                 While direct data feeds for these are not integrated, it's crucial to be aware of them. These indicators help gauge whether the market is overly fearful or greedy.
             </p>
             <ul className="list-disc list-inside space-y-2 text-sm mt-4">
-                <li><span className="font-semibold">Fear &amp; Greed Index:</span> Measures emotion across the market. Extreme fear can be a buying opportunity, while extreme greed can signal a correction is due.</li>
+                <li><span className="font-semibold">Fear & Greed Index:</span> Measures emotion across the market. Extreme fear can be a buying opportunity, while extreme greed can signal a correction is due.</li>
                 <li><span className="font-semibold">Commitment of Traders (COT) Report:</span> Shows the positions of different types of traders. Can indicate how "crowded" a trade is.</li>
                 <li><span className="font-semibold">Volatility Index (VIX):</span> Often called the "fear index" for stocks, its movements can have ripple effects in the forex market, indicating risk-on or risk-off sentiment.</li>
             </ul>

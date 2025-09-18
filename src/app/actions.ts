@@ -15,6 +15,10 @@ const signalSchema = z.object({
   timeframe: z.string(),
   accountBalance: z.coerce.number(),
   riskPercentage: z.coerce.number(),
+  geminiApiKey: z.string().min(1, "Gemini API Key is required."),
+  twelveDataApiKey: z.string().min(1, "Twelve Data API Key is required."),
+  telegramBotToken: z.string().optional(),
+  telegramChatId: z.string().optional(),
 });
 
 export type GenerateSignalSuccess = {
@@ -34,19 +38,22 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
       fields: validatedFields.error.flatten().fieldErrors,
     };
   }
+  
+  const { geminiApiKey, twelveDataApiKey, telegramBotToken, telegramChatId, ...tradeInputs } = validatedFields.data;
 
   try {
     const marketData = await getMarketData(
-      validatedFields.data.currencyPair,
-      validatedFields.data.timeframe
+      tradeInputs.currencyPair,
+      tradeInputs.timeframe,
+      twelveDataApiKey
     );
 
-    const signal = await generateTradeSignal({ ...validatedFields.data, marketData: marketData.latest });
+    const signal = await generateTradeSignal({ ...tradeInputs, marketData: marketData.latest });
     
-    if (signal && marketData.source === 'live') {
-        const message = formatSignalMessage(signal, validatedFields.data.currencyPair, validatedFields.data.timeframe, marketData.source);
+    if (signal && marketData.source === 'live' && telegramBotToken && telegramChatId) {
+        const message = formatSignalMessage(signal, tradeInputs.currencyPair, tradeInputs.timeframe, marketData.source);
         try {
-            await sendTelegramMessage(message);
+            await sendTelegramMessage(message, { botToken: telegramBotToken, chatId: telegramChatId });
         } catch (telegramError) {
             console.error("Failed to send Telegram message:", telegramError);
         }
@@ -73,25 +80,16 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
   }
 }
 
-export type ServiceStatus = 'Configured' | 'Not Configured';
+const ApiKeySchema = z.object({
+  geminiApiKey: z.string().min(1, "Gemini API Key is required."),
+});
 
-export interface SystemStatus {
-  gemini: ServiceStatus;
-  twelveData: ServiceStatus;
-  telegram: ServiceStatus;
-}
-
-export async function getSystemStatus(): Promise<SystemStatus> {
-    return {
-        gemini: (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 0) ? 'Configured' : 'Not Configured',
-        twelveData: (process.env.TWELVE_DATA_API_KEY && process.env.TWELVE_DATA_API_KEY.length > 0) ? 'Configured' : 'Not Configured',
-        telegram: (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN.length > 0 && process.env.TELEGRAM_CHAT_ID && process.env.TELEGRAM_CHAT_ID.length > 0) ? 'Configured' : 'Not Configured'
-    };
-}
-
-export async function getNewsEventsAction(): Promise<EconomicEvent[]> {
+export async function getNewsEventsAction(data: { geminiApiKey?: string }): Promise<EconomicEvent[]> {
+    const validated = ApiKeySchema.safeParse(data);
+    if (!validated.success) return [];
+    
     try {
-        const news = await getEconomicNews();
+        const news = await getEconomicNews({ geminiApiKey: validated.data.geminiApiKey });
         return news.events;
     } catch (error) {
         console.error("Error fetching news events:", error);
@@ -99,12 +97,20 @@ export async function getNewsEventsAction(): Promise<EconomicEvent[]> {
     }
 }
 
-export async function getNewsSentimentAction(currencyPair: string): Promise<NewsSentimentOutput | null> {
+const NewsSentimentActionSchema = z.object({
+    currencyPair: z.string(),
+    geminiApiKey: z.string().min(1, "Gemini API Key is required."),
+});
+
+export async function getNewsSentimentAction(data: { currencyPair: string, geminiApiKey?: string }): Promise<NewsSentimentOutput | null> {
+    const validated = NewsSentimentActionSchema.safeParse(data);
+    if (!validated.success) return null;
+    
     try {
-        const sentiment = await getNewsSentiment({ currencyPair });
+        const sentiment = await getNewsSentiment(validated.data);
         return sentiment;
     } catch (error) {
-        console.error(`Error fetching news sentiment for ${currencyPair}:`, error);
+        console.error(`Error fetching news sentiment for ${validated.data.currencyPair}:`, error);
         return null;
     }
 }

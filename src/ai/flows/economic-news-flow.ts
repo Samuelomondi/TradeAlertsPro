@@ -1,3 +1,4 @@
+
 // This is a server-side file.
 'use server';
 
@@ -15,6 +16,11 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { configureGenkit } from '@/ai/genkit';
+
+const ApiKeySchema = z.object({
+  geminiApiKey: z.string().min(1, "A Gemini API Key is required"),
+});
 
 const EconomicEventSchema = z.object({
   name: z.string().describe('The name of the economic event (e.g., US Non-Farm Payroll).'),
@@ -28,8 +34,8 @@ const EconomicNewsOutputSchema = z.object({
 });
 export type EconomicNewsOutput = z.infer<typeof EconomicNewsOutputSchema>;
 
-export async function getEconomicNews(): Promise<EconomicNewsOutput> {
-  return getEconomicNewsFlow();
+export async function getEconomicNews(input: z.infer<typeof ApiKeySchema>): Promise<EconomicNewsOutput> {
+  return getEconomicNewsFlow(input);
 }
 
 const getEconomicNewsPrompt = ai.definePrompt({
@@ -46,9 +52,11 @@ const getEconomicNewsPrompt = ai.definePrompt({
 const getEconomicNewsFlow = ai.defineFlow(
   {
     name: 'getEconomicNewsFlow',
+    inputSchema: ApiKeySchema,
     outputSchema: EconomicNewsOutputSchema,
   },
-  async () => {
+  async (input) => {
+    const ai = configureGenkit(input.geminiApiKey);
     const {output} = await getEconomicNewsPrompt();
     return output!;
   }
