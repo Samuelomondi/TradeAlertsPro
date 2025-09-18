@@ -102,7 +102,7 @@ export default function Dashboard({ botInfo }: DashboardProps) {
                 </div>
                 <SidebarTrigger />
             </header>
-            {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} history={history} />}
+            {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} history={history} updateTradeStatus={updateTradeStatus} />}
             {activeView === 'history' && (
                 <div className="space-y-8">
                     <TradePerformance history={history} />

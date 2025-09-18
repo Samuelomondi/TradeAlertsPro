@@ -37,6 +37,8 @@ import { cn, formatDate } from "@/lib/utils";
 import type { MarketDataSource } from "@/services/market-data";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Badge } from "./ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+
 
 const formSchema = z.object({
   currencyPair: z.string().min(1, "Currency pair is required."),
@@ -47,6 +49,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 type SignalGenerationProps = {
   addTradeToHistory: (entry: TradeHistoryEntry) => void;
+  updateTradeStatus: (id: string, status: TradeStatus) => void;
   accountBalance: number;
   riskPercentage: number;
   history: TradeHistoryEntry[];
@@ -61,7 +64,7 @@ type StoredSignal = {
 
 const LAST_SIGNAL_STORAGE_KEY = 'lastGeneratedSignal';
 
-export default function SignalGeneration({ addTradeToHistory, accountBalance, riskPercentage, history }: SignalGenerationProps) {
+export default function SignalGeneration({ addTradeToHistory, accountBalance, riskPercentage, history, updateTradeStatus }: SignalGenerationProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSignal, setGeneratedSignal] = useState<TradeSignal | null>(null);
   const [dataSource, setDataSource] = useState<MarketDataSource | null>(null);
@@ -228,7 +231,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                 </Form>
                 </CardContent>
             </Card>
-            <RecentTradesCard history={history} />
+            <RecentTradesCard history={history} updateTradeStatus={updateTradeStatus} />
         </div>
         <div className="h-full">
             {isLoading && (
@@ -316,13 +319,22 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp }: { signal
     );
 };
 
-const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
+const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistoryEntry[], updateTradeStatus: (id: string, status: TradeStatus) => void; }) => {
     const recentTrades = history.slice(1, 3);
 
     const statusConfig: { [key in TradeStatus]: { variant: "secondary" | "default" | "destructive", label: string, className?: string } } = {
         open: { variant: "secondary", label: "Open" },
-        won: { variant: "default", className: "bg-green-600 hover:bg-green-700", label: "Won" },
+        won: { variant: "default", className: "bg-green-600 hover:bg-green-700 text-white", label: "Won" },
         lost: { variant: "destructive", label: "Lost" },
+    };
+    
+    const statusCycle: TradeStatus[] = ['open', 'won', 'lost'];
+
+    const handleStatusClick = (trade: TradeHistoryEntry) => {
+        const currentIndex = statusCycle.indexOf(trade.status);
+        const nextIndex = (currentIndex + 1) % statusCycle.length;
+        const nextStatus = statusCycle[nextIndex];
+        updateTradeStatus(trade.id, nextStatus);
     };
 
 
@@ -336,8 +348,9 @@ const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
                 <CardDescription>A quick look at your last two signals.</CardDescription>
             </CardHeader>
             <CardContent>
+                <TooltipProvider>
                 {recentTrades.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {recentTrades.map((trade) => {
                              const config = statusConfig[trade.status];
                              return (
@@ -349,7 +362,20 @@ const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
                                             <p className="text-xs text-muted-foreground">{trade.timestamp}</p>
                                         </div>
                                     </div>
-                                    <Badge variant={config.variant} className={cn(config.className)}>{config.label}</Badge>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-1.5">
+                                            <ConfirmationItem label="MACD" confirmed={trade.signal.macdConfirmation} />
+                                            <ConfirmationItem label="Bollinger" confirmed={trade.signal.bollingerConfirmation} />
+                                        </div>
+                                        <Badge 
+                                            variant={config.variant} 
+                                            className={cn(config.className, "cursor-pointer")}
+                                            onClick={() => handleStatusClick(trade)}
+                                            title={`Click to change status (currently ${trade.status})`}
+                                        >
+                                            {config.label}
+                                        </Badge>
+                                    </div>
                                 </div>
                              )
                         })}
@@ -360,6 +386,7 @@ const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
                         <p className="text-sm">No prior trades to show.</p>
                     </div>
                 )}
+                </TooltipProvider>
             </CardContent>
         </Card>
     )
@@ -373,10 +400,14 @@ const InfoItem = ({ label, value }: { label: string; value: string }) => (
 );
 
 const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: boolean }) => (
-    <div className="flex items-center gap-2 text-sm">
-        {confirmed ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
-        <span className="font-medium">{label}</span>
-    </div>
+     <Tooltip>
+        <TooltipTrigger asChild>
+             <div className="flex items-center">
+                {confirmed ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
+            </div>
+        </TooltipTrigger>
+        <TooltipContent>
+            <p>{label} {confirmed ? 'Confirmed' : 'Not Confirmed'}</p>
+        </TooltipContent>
+    </Tooltip>
 );
-
-    
