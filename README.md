@@ -1,12 +1,14 @@
 # TradeAlert
 
-TradeAlert is a web application designed to assist forex traders by generating trade signals using deterministic technical analysis. It provides a dashboard with tools for signal generation, risk management, trade history tracking, and a comprehensive sentiment analysis view with crucial market information. It also integrates with Telegram to send real-time signal notifications.
+TradeAlert is a web application designed to assist forex traders by generating trade signals using deterministic technical analysis. It provides a dashboard with tools for signal generation, a live market chart, risk management, trade history tracking, and a comprehensive sentiment analysis view with crucial market information. It also integrates with Telegram to send real-time signal notifications.
 
 ## Features
 
 - **Logic-Based Signal Generation**: Input a currency pair and timeframe to get a trade signal based on a consistent, deterministic set of rules. The system analyzes technical indicators (EMA, RSI, ATR) to generate a signal with an entry, stop loss, take profit, and a calculated lot size.
+- **Live Market Chart**: Each generated signal is accompanied by an interactive chart displaying recent price action and the EMA (20/50) indicators, providing immediate visual context for the trade signal.
 - **Telegram Notifications**: Automatically sends generated trade signals to a designated Telegram chat, allowing you to receive trade ideas on the go.
-- **Persistent Trade History**: Keeps a running log of all generated signals, saved in your browser's local storage. You can update the status of each trade (Won, Lost, Open) to track your performance over time.
+- **Persistent Trade History**: Keeps a running log of all generated signals, saved in your browser's local storage.
+- **Interactive Status Updates**: Easily update the status of each trade (Won, Lost, Open) by clicking the status badge on the main signal card, the recent trades list, or in the full history table.
 - **Trade Performance Dashboard**: A visual summary of your trading performance, including total trades, wins, losses, and your win rate, calculated from your trade history.
 - **Risk Settings**: Configure your account balance and risk percentage to automatically calculate the appropriate position size for every trade signal.
 - **Live Market Hours**: A live dashboard showing the open/closed status of major forex trading sessions (London, New York, Tokyo) to help you understand the current market environment.
@@ -24,6 +26,7 @@ TradeAlert is a web application designed to assist forex traders by generating t
 - **AI**: [Genkit](https://firebase.google.com/docs/genkit) (for news analysis)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
+- **Charting**: [Recharts](https://recharts.org/)
 - **Icons**: [Lucide React](https://lucide.dev/guide/packages/lucide-react)
 
 ## Getting Started
@@ -89,3 +92,5 @@ The application is structured into several key components:
 - **Server Actions (`src/app/actions.ts`)**: Handles form submissions from the client, invokes the signal generation logic and AI flows, and triggers Telegram notifications.
 - **Services (`src/services`)**: Contains the logic for fetching live market data from external APIs like Twelve Data.
 - **Configuration (`src/lib`)**: Contains constants, type definitions, and utility functions used throughout the application.
+
+![final](https://storage.googleapis.com/aip-dev-user-id-0213ba43/46f6f96d-3575-4702-8d48-31628d7120a1.png)
