@@ -77,4 +77,4 @@ The application is structured into several key components:
 - **Services (`src/services`)**: Contains the logic for fetching live market data from external APIs like Twelve Data.
 - **Configuration (`src/lib`)**: Contains constants, type definitions, and utility functions used throughout the application.
 
-![final](https://storage.googleapis.com/aip-dev-user-id-0213ba43/46f6f96d-3575-4702-8d48-31628d7120a1.png)
+![final](./image.png)
