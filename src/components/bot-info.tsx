@@ -26,7 +26,9 @@ import { Button } from '@/components/ui/button';
 import { useSettings, type AppSettings } from './settings-provider';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { KeyRound, Info, Bell, Send, Eye, EyeOff } from 'lucide-react';
+import { KeyRound, Info, Bell, Send, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import { Separator } from './ui/separator';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   geminiApiKey: z.string().min(1, 'Gemini API Key is required.'),
@@ -57,6 +59,9 @@ export default function BotInfo() {
     });
   }
 
+  const isGeminiConfigured = !!settings.geminiApiKey;
+  const isTwelveDataConfigured = !!settings.twelveDataApiKey;
+
   return (
     <Card>
       <CardHeader>
@@ -77,8 +82,37 @@ export default function BotInfo() {
                 API providers when you use the app's features.
               </AlertDescription>
             </Alert>
+            
+            <div>
+              <h3 className="mb-4 text-lg font-medium">System Status</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium">Gemini API</p>
+                    <p className="text-xs text-muted-foreground">Powers AI-based features like news analysis.</p>
+                  </div>
+                  <div className={cn("flex items-center gap-2 text-sm font-semibold", isGeminiConfigured ? "text-green-600" : "text-red-600")}>
+                      {isGeminiConfigured ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                      {isGeminiConfigured ? 'Configured' : 'Missing Key'}
+                  </div>
+                </div>
+                 <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium">Twelve Data API</p>
+                    <p className="text-xs text-muted-foreground">Provides market data for signal generation.</p>
+                  </div>
+                  <div className={cn("flex items-center gap-2 text-sm font-semibold", isTwelveDataConfigured ? "text-green-600" : "text-red-600")}>
+                      {isTwelveDataConfigured ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                      {isTwelveDataConfigured ? 'Configured' : 'Missing Key'}
+                  </div>
+                </div>
+              </div>
+            </div>
 
+            <Separator />
+            
             <div className="space-y-4">
+                <h3 className="text-lg font-medium">API Keys</h3>
                 <FormField
                 control={form.control}
                 name="geminiApiKey"
@@ -177,3 +211,5 @@ export default function BotInfo() {
     </Card>
   );
 }
+
+    
