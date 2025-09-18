@@ -26,7 +26,7 @@ export default function MarketChart({ data }: MarketChartProps) {
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
   
-  const chartConfig = {
+  const chartConfig = React.useMemo(() => ({
     price: {
       label: "Price",
       color: isDark ? "hsl(var(--chart-1))" : "hsl(var(--primary))",
@@ -39,7 +39,7 @@ export default function MarketChart({ data }: MarketChartProps) {
       label: "EMA 50",
       color: isDark ? "hsl(var(--chart-5))" : "hsl(var(--chart-2))",
     },
-  }
+  }), [isDark]);
 
   const formattedData = data.map(d => ({
     ...d,
@@ -78,7 +78,7 @@ export default function MarketChart({ data }: MarketChartProps) {
             axisLine={false}
             tickMargin={8}
             domain={domain}
-            tickFormatter={(value) => value.toFixed(4)}
+            tickFormatter={(value) => typeof value === 'number' ? value.toFixed(4) : ''}
             fontSize={12}
         />
         <Tooltip
