@@ -18,7 +18,7 @@ import {z} from 'genkit';
 
 const EconomicEventSchema = z.object({
   name: z.string().describe('The name of the economic event (e.g., US Non-Farm Payroll).'),
-  time: z.string().describe('The scheduled time of the event, including timezone (e.g., Friday, 08:30 EST).'),
+  time: z.string().describe('The scheduled time of the event in UTC as an ISO 8601 string (e.g., 2024-07-26T12:30:00Z).'),
 });
 export type EconomicEvent = z.infer<typeof EconomicEventSchema>;
 
@@ -39,7 +39,7 @@ const getEconomicNewsPrompt = ai.definePrompt({
 
   Focus on events that are known to cause significant volatility in the forex markets, such as interest rate decisions from major central banks (FOMC, ECB, BoJ), inflation reports (CPI), and employment data (NFP).
 
-  For each event, provide the name and the scheduled time, including the day and timezone.
+  For each event, provide the name and the scheduled time in UTC as an ISO 8601 string.
   `,
 });
 

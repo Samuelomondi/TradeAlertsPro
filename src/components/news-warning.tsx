@@ -8,6 +8,16 @@ import { getNewsEventsAction } from '@/app/actions';
 import type { EconomicEvent } from '@/ai/flows/economic-news-flow';
 import { Skeleton } from './ui/skeleton';
 
+const formatEventTime = (isoString: string) => {
+  const date = new Date(isoString);
+  return date.toLocaleString(undefined, {
+    weekday: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  });
+};
+
 export default function NewsWarning() {
   const [events, setEvents] = useState<EconomicEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +57,7 @@ export default function NewsWarning() {
             ) : (
                 <ul className="list-disc list-inside space-y-2 text-sm">
                     {events.length > 0 ? events.map((event, index) => (
-                        <li key={index}><span className="font-semibold">{event.name}:</span> {event.time}</li>
+                        <li key={index}><span className="font-semibold">{event.name}:</span> {formatEventTime(event.time)}</li>
                     )) : (
                         <li>No upcoming high-impact news events found.</li>
                     )}
