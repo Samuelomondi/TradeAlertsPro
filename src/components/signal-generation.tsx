@@ -21,7 +21,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -38,14 +37,6 @@ import { cn, formatDate } from "@/lib/utils";
 const formSchema = z.object({
   currencyPair: z.string().min(1, "Currency pair is required."),
   timeframe: z.string().min(1, "Timeframe is required."),
-  currentPrice: z.string().min(1, "Current price is required."),
-  ema20: z.string().min(1, "EMA 20 is required."),
-  ema50: z.string().min(1, "EMA 50 is required."),
-  rsi14: z.string().min(1, "RSI 14 is required."),
-  atr14: z.string().min(1, "ATR 14 is required."),
-  macdHistogram: z.string().min(1, "MACD Histogram is required."),
-  bollingerUpper: z.string().min(1, "Bollinger Upper is required."),
-  bollingerLower: z.string().min(1, "Bollinger Lower is required."),
 });
 
 type SignalGenerationProps = {
@@ -62,14 +53,6 @@ export default function SignalGeneration({ addTradeToHistory }: SignalGeneration
     defaultValues: {
       currencyPair: "USD/CAD",
       timeframe: "1H",
-      currentPrice: "1.3785",
-      ema20: "1.3780",
-      ema50: "1.3795",
-      rsi14: "30.81",
-      atr14: "0.0025",
-      macdHistogram: "-0.00012",
-      bollingerUpper: "1.3810",
-      bollingerLower: "1.3750",
     },
   });
 
@@ -114,7 +97,7 @@ export default function SignalGeneration({ addTradeToHistory }: SignalGeneration
         <CardHeader>
           <CardTitle>Generate Trade Signal</CardTitle>
           <CardDescription>
-            Enter the technical indicator values to generate a new trade signal.
+            Select a currency pair and timeframe to generate a new trade signal.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -166,17 +149,6 @@ export default function SignalGeneration({ addTradeToHistory }: SignalGeneration
                   )}
                 />
               </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <FormField control={form.control} name="currentPrice" render={({ field }) => <FormInputItem label="Current Price" field={field} />} />
-                <FormField control={form.control} name="ema20" render={({ field }) => <FormInputItem label="EMA 20" field={field} />} />
-                <FormField control={form.control} name="ema50" render={({ field }) => <FormInputItem label="EMA 50" field={field} />} />
-                <FormField control={form.control} name="rsi14" render={({ field }) => <FormInputItem label="RSI 14" field={field} />} />
-                <FormField control={form.control} name="atr14" render={({ field }) => <FormInputItem label="ATR 14" field={field} />} />
-                <FormField control={form.control} name="macdHistogram" render={({ field }) => <FormInputItem label="MACD Histogram" field={field} />} />
-                <FormField control={form.control} name="bollingerUpper" render={({ field }) => <FormInputItem label="Bollinger Upper" field={field} />} />
-                <FormField control={form.control} name="bollingerLower" render={({ field }) => <FormInputItem label="Bollinger Lower" field={field} />} />
-              </div>
 
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -204,20 +176,9 @@ export default function SignalGeneration({ addTradeToHistory }: SignalGeneration
   );
 }
 
-const FormInputItem = ({ label, field }: { label: string; field: any }) => (
-    <FormItem>
-        <FormLabel>{label}</FormLabel>
-        <FormControl>
-        <Input placeholder={`Enter ${label}`} {...field} type="number" step="any" />
-        </FormControl>
-        <FormMessage />
-    </FormItem>
-);
-
 const GeneratedSignalCard = ({ signal, inputs }: { signal: TradeSignal, inputs: z.infer<typeof formSchema> }) => {
     const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
-    const rsiStatus = parseFloat(inputs.rsi14) > 70 ? 'Overbought' : parseFloat(inputs.rsi14) < 30 ? 'Oversold' : 'Neutral';
-
+    
     return (
         <Card className={cn(
             "border-2",
@@ -240,7 +201,6 @@ const GeneratedSignalCard = ({ signal, inputs }: { signal: TradeSignal, inputs: 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                     <InfoItem label="Timeframe" value={inputs.timeframe} />
                     <InfoItem label="Trend" value={signal.trend} />
-                    <InfoItem label="RSI (14)" value={`${parseFloat(inputs.rsi14).toFixed(2)} (${rsiStatus})`} />
                     <InfoItem label="Entry" value={signal.entry.toFixed(5)} />
                     <InfoItem label="Stop Loss (SL)" value={signal.stopLoss.toFixed(5)} />
                     <InfoItem label="Take Profit (TP)" value={signal.takeProfit.toFixed(5)} />

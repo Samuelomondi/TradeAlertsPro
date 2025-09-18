@@ -19,16 +19,14 @@ export function formatDate(date: Date) {
     }) + ' UTC';
 }
 
-export function formatSignalMessage(signal: TradeSignal, currencyPair: string, timeframe: string, rsi: number): string {
+export function formatSignalMessage(signal: TradeSignal, currencyPair: string, timeframe: string): string {
     const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
-    const rsiStatus = rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral';
 
     return `
 *${currencyPair}*
 *Timeframe:* ${timeframe}
 *Generated:* ${formatDate(new Date())}
 *Trend:* ${signal.trend}
-*RSI:* ${rsi.toFixed(2)} (${rsiStatus})
 *Signal:* ${signal.signal === 'Buy' ? '📈' : '📉'} ${signal.signal}
 *Entry:* ${signal.entry.toFixed(4)}
 *SL:* ${signal.stopLoss.toFixed(4)} | *TP:* ${signal.takeProfit.toFixed(4)}
