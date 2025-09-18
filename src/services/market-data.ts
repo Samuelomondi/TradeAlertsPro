@@ -87,7 +87,7 @@ export async function getMarketData(
   timeframe: string
 ): Promise<MarketDataResponse> {
   // Clear check for API key before making any calls.
-  if (!API_KEY || API_KEY === "YOUR_TWELVE_DATA_API_KEY") {
+  if (!API_KEY || API_KEY.startsWith("YOUR_")) {
     console.warn('Twelve Data API key is not configured. Falling back to mock data.');
     const { latest } = generateMockMarketData(currencyPair);
     return { latest, source: 'mock' };
@@ -140,12 +140,19 @@ export async function getMarketData(
 }
 
 export async function getHistoricalData(currencyPair: string, timeframe: string, outputSize = 500): Promise<HistoricalDataPoint[]> {
+    if (!API_KEY || API_KEY.startsWith("YOUR_")) {
+        throw new Error(`Twelve Data API key is not configured. Historical data cannot be fetched.`);
+    }
+
     const intervalMap: { [key: string]: string } = {
         '1M': '1min', '5M': '5min', '15M': '15min', '30M': '30min', '1H': '1h', '4H': '4h', '1D': '1day', '1W': '1week'
     };
     const interval = intervalMap[timeframe] || '1h';
     
-    // Define all indicators to be fetched in a single call
+    // EMA50 is the longest lookback period, so fetch extra data to allow it to "warm up"
+    const requiredWarmup = 50; 
+    const apiOutputSize = outputSize + requiredWarmup;
+
     const indicators = [
         "ema:time_period_20",
         "ema:time_period_50",
@@ -160,7 +167,7 @@ export async function getHistoricalData(currencyPair: string, timeframe: string,
         interval, 
         dp: '5', 
         timezone: 'UTC', 
-        outputsize: String(outputSize),
+        outputsize: String(apiOutputSize),
         order: 'ASC', // Fetch oldest first
         technical_indicators: indicators
     };
@@ -189,8 +196,9 @@ export async function getHistoricalData(currencyPair: string, timeframe: string,
         p.bollingerUpper !== undefined && 
         p.bollingerLower !== undefined
     ) as HistoricalDataPoint[];
-
-    return historicalPoints;
+    
+    // Ensure we return the correct number of points after filtering
+    return historicalPoints.slice(-outputSize);
 }
 
 /**
@@ -234,4 +242,3 @@ function getBasePriceForPair(pair: string): number {
       return 1.2;
   }
 }
-
