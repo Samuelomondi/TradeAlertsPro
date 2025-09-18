@@ -7,7 +7,7 @@ import { sendTelegramMessage } from "@/lib/telegram";
 import { formatSignalMessage } from "@/lib/utils";
 import { getMarketData } from "@/services/market-data";
 import { getEconomicNews, type EconomicEvent } from "@/ai/flows/economic-news-flow";
-import type { MarketDataSeries, MarketDataSource } from "@/services/market-data";
+import type { MarketDataSource } from "@/services/market-data";
 
 const signalSchema = z.object({
   currencyPair: z.string(),
@@ -19,7 +19,6 @@ const signalSchema = z.object({
 type GenerateSignalSuccess = {
     signal: TradeSignalOutput;
     source: MarketDataSource;
-    series: MarketDataSeries;
 }
 
 export async function generateSignalAction(formData: FormData): Promise<{ data?: GenerateSignalSuccess; error?: string; fields?: any; }> {
@@ -35,7 +34,7 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
   }
 
   try {
-    const { latest, series, source } = await getMarketData(
+    const { latest, source } = await getMarketData(
       validatedFields.data.currencyPair,
       validatedFields.data.timeframe
     );
@@ -58,7 +57,7 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
         }
     }
 
-    const response: GenerateSignalSuccess = { signal, source, series };
+    const response: GenerateSignalSuccess = { signal, source };
     return { data: response };
 
   } catch (error) {
