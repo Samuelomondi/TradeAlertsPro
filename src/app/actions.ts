@@ -39,6 +39,8 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
       validatedFields.data.timeframe
     );
 
+    // Allow mock data to generate a signal for demonstration purposes.
+    // The UI will indicate that the data source is 'mock'.
     const signal = await generateTradeSignal({ ...validatedFields.data, marketData: marketData.latest });
     
     if (signal && marketData.source === 'live') {
@@ -56,7 +58,16 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
 
   } catch (error) {
     console.error("Error generating trade signal:", error);
-    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    
+    let errorMessage = "An unknown error occurred while generating the signal.";
+    if (error instanceof Error) {
+        if (error.message.includes('503') || error.message.toLowerCase().includes('overloaded')) {
+            errorMessage = "The AI model is currently busy. Please wait a moment and try again.";
+        } else {
+            errorMessage = error.message;
+        }
+    }
+    
     return {
       error: `Failed to generate trade signal: ${errorMessage}`,
     };
