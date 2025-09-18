@@ -9,6 +9,8 @@ import { getMarketData } from "@/services/market-data";
 const signalSchema = z.object({
   currencyPair: z.string(),
   timeframe: z.string(),
+  accountBalance: z.coerce.number(),
+  riskPercentage: z.coerce.number(),
 });
 
 export async function generateSignalAction(formData: FormData) {

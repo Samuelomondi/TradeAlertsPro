@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,39 +16,45 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Percent } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   accountBalance: z.coerce.number().positive("Account balance must be positive."),
   riskPercentage: z.coerce.number().min(0.1, "Risk must be at least 0.1%").max(100, "Risk cannot exceed 100%."),
-  stopLossPips: z.coerce.number().positive("Stop loss pips must be positive."),
-  pipValue: z.coerce.number().positive("Pip value must be positive."),
 });
 
-export default function RiskCalculator() {
-  const [lotSize, setLotSize] = useState<number | null>(null);
+type RiskCalculatorProps = {
+    accountBalance: number;
+    riskPercentage: number;
+    setAccountBalance: (value: number) => void;
+    setRiskPercentage: (value: number) => void;
+};
+
+export default function RiskCalculator({ accountBalance, riskPercentage, setAccountBalance, setRiskPercentage }: RiskCalculatorProps) {
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      accountBalance: 10000,
-      riskPercentage: 1,
-      stopLossPips: 25,
-      pipValue: 10,
+      accountBalance,
+      riskPercentage,
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const riskAmount = values.accountBalance * (values.riskPercentage / 100);
-    const stopLossValue = values.stopLossPips * values.pipValue;
-    const calculatedLotSize = riskAmount / stopLossValue;
-    setLotSize(calculatedLotSize);
+    setAccountBalance(values.accountBalance);
+    setRiskPercentage(values.riskPercentage);
+    toast({
+      title: "Settings Saved",
+      description: "Your new risk parameters have been applied.",
+    });
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Risk & Lot Size Calculator</CardTitle>
-        <CardDescription>Calculate your trade size based on your risk tolerance.</CardDescription>
+        <CardTitle>Risk Settings</CardTitle>
+        <CardDescription>Set your account balance and risk percentage for all generated signals.</CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -79,36 +85,7 @@ export default function RiskCalculator() {
                     <FormControl>
                       <div className="relative">
                         <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input type="number" placeholder="e.g., 1" className="pl-8" {...field} />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="stopLossPips"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Stop Loss (pips)</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="e.g., 25" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="pipValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Pip Value (per lot)</FormLabel>
-                     <FormControl>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input type="number" placeholder="e.g., 10" className="pl-8" {...field} />
+                        <Input type="number" placeholder="e.g., 1" className="pl-8" step="0.1" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -116,18 +93,12 @@ export default function RiskCalculator() {
                 )}
               />
             </div>
+             <p className="text-xs text-muted-foreground pt-4">
+              These values will be used to automatically calculate the lot size for each new trade signal generated. The calculation will use the stop loss from the generated signal.
+            </p>
           </CardContent>
-          <CardFooter className="flex flex-col items-start gap-4">
-            <Button type="submit">Calculate Lot Size</Button>
-            {lotSize !== null && (
-              <div className="w-full p-4 bg-secondary rounded-lg animate-in fade-in-50">
-                <h3 className="text-lg font-semibold">Calculated Lot Size</h3>
-                <p className="text-3xl font-bold text-primary">{lotSize.toFixed(2)} lots</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Amount at risk: ${((form.getValues('accountBalance') * form.getValues('riskPercentage')) / 100).toFixed(2)}
-                </p>
-              </div>
-            )}
+          <CardFooter>
+            <Button type="submit">Save Settings</Button>
           </CardFooter>
         </form>
       </Form>

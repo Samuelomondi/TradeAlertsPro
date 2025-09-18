@@ -27,6 +27,7 @@ export function formatSignalMessage(signal: TradeSignal, currencyPair: string, t
     return `
 *${currencyPair}* (${timeframe})
 *Signal:* ${signal.signal === 'Buy' ? '📈' : '📉'} ${signal.signal}
+*Lot Size:* ${signal.lotSize.toFixed(2)}
 *Entry:* ${signal.entry.toFixed(5)}
 *SL:* ${signal.stopLoss.toFixed(5)}
 *TP:* ${signal.takeProfit.toFixed(5)}

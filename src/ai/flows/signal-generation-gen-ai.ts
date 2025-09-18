@@ -14,6 +14,8 @@ import {z} from 'genkit';
 const TradeSignalInputSchema = z.object({
   currencyPair: z.string().describe('The currency pair to analyze (e.g., EUR/USD).'),
   timeframe: z.string().describe('The timeframe for analysis (e.g., 1H, 4H, 1D).'),
+  accountBalance: z.number().describe('The account balance for risk calculation.'),
+  riskPercentage: z.number().describe('The risk percentage for lot size calculation.'),
   marketData: MarketDataSchema,
 });
 
@@ -25,6 +27,7 @@ const TradeSignalOutputSchema = z.object({
   entry: z.number().describe('The recommended entry price.'),
   stopLoss: z.number().describe('The recommended stop loss price.'),
   takeProfit: z.number().describe('The recommended take profit price.'),
+  lotSize: z.number().describe('The calculated lot size for the trade.'),
   macdConfirmation: z.boolean().describe('Whether MACD conditions confirm the signal.'),
   bollingerConfirmation: z.boolean().describe('Whether Bollinger Band conditions confirm the signal.'),
 });
@@ -44,6 +47,8 @@ Analyze the provided technical indicator values for the given currency pair and 
 
 Currency Pair: {{{currencyPair}}}
 Timeframe: {{{timeframe}}}
+Account Balance: {{{accountBalance}}}
+Risk Percentage: {{{riskPercentage}}}
 
 Technical Indicators:
 - Current Price: {{{currentPrice}}}
@@ -68,7 +73,12 @@ Based on this analysis, provide:
 - Stop Loss Price
 - Take Profit Price
 - macdConfirmation (true/false): meets predefined conditions
-- bollingerConfirmation (true/false): meets predefined conditions`,
+- bollingerConfirmation (true/false): meets predefined conditions
+
+Finally, calculate the lot size for the trade. Assume a standard pip value of $10 per lot.
+The formula is: Lot Size = (Account Balance * (Risk Percentage / 100)) / (Stop Loss in Pips * Pip Value)
+Stop Loss in Pips = abs(Entry Price - Stop Loss Price) * 10000 (for most pairs).
+`,
 });
 
 const generateTradeSignalFlow = ai.defineFlow(
@@ -78,13 +88,11 @@ const generateTradeSignalFlow = ai.defineFlow(
     outputSchema: TradeSignalOutputSchema,
   },
   async input => {
-    // Market data is now passed into the flow
     const combinedInput = {
       ...input,
       ...input.marketData,
     };
 
-    // Combine input and market data to call the prompt
     const {output} = await prompt(combinedInput);
     return output!;
   }

@@ -42,9 +42,11 @@ const formSchema = z.object({
 
 type SignalGenerationProps = {
   addTradeToHistory: (entry: TradeHistoryEntry) => void;
+  accountBalance: number;
+  riskPercentage: number;
 };
 
-export default function SignalGeneration({ addTradeToHistory }: SignalGenerationProps) {
+export default function SignalGeneration({ addTradeToHistory, accountBalance, riskPercentage }: SignalGenerationProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSignal, setGeneratedSignal] = useState<TradeSignal | null>(null);
   const [dataSource, setDataSource] = useState<MarketDataSource | null>(null);
@@ -66,6 +68,9 @@ export default function SignalGeneration({ addTradeToHistory }: SignalGeneration
     Object.entries(values).forEach(([key, value]) => {
       formData.append(key, value);
     });
+    formData.append("accountBalance", String(accountBalance));
+    formData.append("riskPercentage", String(riskPercentage));
+
 
     const result = await generateSignalAction(formData);
     setIsLoading(false);
@@ -109,7 +114,7 @@ export default function SignalGeneration({ addTradeToHistory }: SignalGeneration
         <CardHeader>
           <CardTitle>Generate Trade Signal</CardTitle>
           <CardDescription>
-            Select a currency pair and timeframe to generate a new trade signal.
+            Select a currency pair and timeframe. Risk settings are applied from the Risk Settings page.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -220,6 +225,10 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource }: { signal: TradeSign
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
+                <div className="p-4 bg-primary/10 rounded-lg text-center">
+                    <p className="text-sm text-primary font-semibold">Lot Size</p>
+                    <p className="text-3xl font-bold text-primary">{signal.lotSize.toFixed(2)}</p>
+                </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                     <InfoItem label="Timeframe" value={inputs.timeframe} />
                     <InfoItem label="Trend" value={signal.trend} />

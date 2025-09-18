@@ -35,13 +35,14 @@ export default function TradeHistory({ history }: TradeHistoryProps) {
               <TableHead>Entry</TableHead>
               <TableHead>SL</TableHead>
               <TableHead>TP</TableHead>
+              <TableHead>Lot Size</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {history.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center h-24">
+                <TableCell colSpan={9} className="text-center h-24">
                   No trade signals generated yet.
                 </TableCell>
               </TableRow>
@@ -60,6 +61,7 @@ export default function TradeHistory({ history }: TradeHistoryProps) {
                   <TableCell>{trade.signal.entry.toFixed(5)}</TableCell>
                   <TableCell>{trade.signal.stopLoss.toFixed(5)}</TableCell>
                   <TableCell>{trade.signal.takeProfit.toFixed(5)}</TableCell>
+                  <TableCell>{trade.signal.lotSize.toFixed(2)}</TableCell>
                   <TableCell>
                     <Badge variant={trade.status === 'open' ? 'secondary' : 'default'}>{trade.status}</Badge>
                   </TableCell>
