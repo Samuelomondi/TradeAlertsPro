@@ -12,7 +12,6 @@
 import {ai} from '@/ai/genkit';
 import {LatestIndicators, LatestIndicatorsSchema} from '@/services/market-data';
 import {z} from 'genkit';
-import { confirmTradeSignal } from './confirmations-gen-ai';
 
 const TradeSignalInputSchema = z.object({
   currencyPair: z.string().describe('The currency pair to analyze (e.g., EUR/USD).'),
@@ -44,7 +43,7 @@ export async function generateTradeSignal(input: TradeSignalInput): Promise<Trad
 const prompt = ai.definePrompt({
   name: 'tradeSignalPrompt',
   input: {schema: TradeSignalInputSchema},
-  output: {schema: TradeSignalOutputSchema.omit({ macdConfirmation: true, bollingerConfirmation: true })},
+  output: {schema: TradeSignalOutputSchema},
   prompt: `You are an expert trading signal generator.
 Analyze the provided technical indicator values for the given currency pair and timeframe to create a trade signal.
 
@@ -74,6 +73,10 @@ Based on this analysis, provide:
 - Stop Loss Price (Use ATR to set a logical stop loss)
 - Take Profit Price (Aim for at least a 1.5:1 risk/reward ratio)
 
+Also, provide boolean confirmations for MACD and Bollinger Bands:
+- macdConfirmation: Set to true if the MACD Histogram supports your signal (e.g., positive for a Buy, negative for a Sell).
+- bollingerConfirmation: Set to true if the price location relative to the bands supports your signal (e.g., near the lower band for a Buy, near the upper band for a Sell).
+
 Finally, calculate the lot size for the trade. Assume a standard pip value of $10 per lot.
 The formula is: Lot Size = (Account Balance * (Risk Percentage / 100)) / (Stop Loss in Pips * Pip Value)
 Stop Loss in Pips = abs(Entry Price - Stop Loss Price) * 10000 (for most pairs).
@@ -88,26 +91,10 @@ const generateTradeSignalFlow = ai.defineFlow(
   },
   async input => {
     // Generate the core trade signal first
-    const {output: coreSignal} = await prompt(input);
-    if (!coreSignal) {
-        throw new Error("Failed to generate core trade signal.");
+    const {output} = await prompt(input);
+    if (!output) {
+        throw new Error("Failed to generate trade signal.");
     }
-
-    // Now, get the confirmations from the specialized agent
-    const macdCondition = `For a ${coreSignal.signal} signal, the MACD Histogram is ${input.marketData.macdHistogram.toFixed(5)}. A positive value supports a Buy, a negative value supports a Sell.`;
-    const bollingerCondition = `For a ${coreSignal.signal} signal, the current price is ${input.marketData.currentPrice.toFixed(5)} and the bands are at ${input.marketData.bollingerLower.toFixed(5)} (lower) and ${input.marketData.bollingerUpper.toFixed(5)} (upper). Price near the lower band supports a Buy, price near the upper band supports a Sell.`;
-
-    const confirmations = await confirmTradeSignal({
-        macdCondition,
-        bollingerCondition,
-    });
-    
-    // Combine the results
-    return {
-        ...coreSignal,
-        macdConfirmation: confirmations.macdConfirmation,
-        bollingerConfirmation: confirmations.bollingerConfirmation,
-    };
+    return output;
   }
 );
-
