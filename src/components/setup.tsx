@@ -122,7 +122,7 @@ export default function Setup() {
                     <Bell className="h-4 w-4" />
                     <AlertTitle>Telegram Notifications (Optional)</AlertTitle>
                     <AlertDescription>
-                        To receive notifications, provide your Telegram Chat ID. You can get this by messaging a bot like UserInfoBot on Telegram.
+                        To receive private notifications, first <a href="https://t.me/vibecodefxbot" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-primary">start a chat with the bot</a>, then find your Chat ID (e.g. from UserInfoBot) and enter it below.
                     </AlertDescription>
                      <FormField
                         control={form.control}

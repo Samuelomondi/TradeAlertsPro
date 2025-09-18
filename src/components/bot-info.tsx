@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { useSettings, type AppSettings } from './settings-provider';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { KeyRound, Info, Bell, Send } from 'lucide-react';
+import { KeyRound, Info, Bell, Send, Link } from 'lucide-react';
 
 const formSchema = z.object({
   geminiApiKey: z.string().min(1, 'Gemini API Key is required.'),
@@ -125,7 +125,7 @@ export default function BotInfo() {
                 <Bell className="h-4 w-4" />
                 <AlertTitle>Telegram Notifications</AlertTitle>
                 <AlertDescription>
-                    To receive trade signals on Telegram, enter your personal Chat ID below. This is optional.
+                   To receive private signals, first <a href="https://t.me/vibecodefxbot" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-primary">click here to start a chat with the bot</a>. Then, enter your personal Chat ID below. This is optional.
                 </AlertDescription>
                 <FormField
                 control={form.control}
