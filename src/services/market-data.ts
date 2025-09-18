@@ -14,7 +14,14 @@ export const LatestIndicatorsSchema = z.object({
   bollingerLower: z.number(),
 });
 
+// Schema for historical data points used in backtesting
+const HistoricalDataPointSchema = LatestIndicatorsSchema.extend({
+    time: z.string(),
+    high: z.number(),
+    low: z.number(),
+});
 
+export type HistoricalDataPoint = z.infer<typeof HistoricalDataPointSchema>;
 export type LatestIndicators = z.infer<typeof LatestIndicatorsSchema>;
 export type MarketDataSource = 'live' | 'mock';
 
@@ -29,6 +36,10 @@ const BASE_URL = 'https://api.twelvedata.com';
 
 // Helper to make API calls to Twelve Data
 async function fetchTwelveData(endpoint: string, params: Record<string, string>) {
+  if (!API_KEY || API_KEY.startsWith("YOUR_")) {
+      throw new Error(`Twelve Data API key is not configured. Please add it to your environment variables.`);
+  }
+
   const query = new URLSearchParams({...params, apikey: API_KEY!}).toString();
   const url = `${BASE_URL}/${endpoint}?${query}`;
   
@@ -37,7 +48,7 @@ async function fetchTwelveData(endpoint: string, params: Record<string, string>)
     if (!response.ok) {
         const errorText = await response.text();
         console.error(`Twelve Data API Error (${response.status}) for ${endpoint}: ${errorText}`);
-        throw new Error(`API returned status ${response.status} for ${endpoint}`);
+        throw new Error(`API returned status ${response.status} for ${endpoint}. Response: ${errorText}`);
     }
     const data = await response.json();
     if (data.status === 'error' || data.code < 200 || data.code >= 300) {
@@ -126,6 +137,61 @@ export async function getMarketData(
      const { latest } = generateMockMarketData(currencyPair);
      return { latest, source: 'mock' };
   }
+}
+
+export async function getHistoricalData(currencyPair: string, timeframe: string, outputSize = 500): Promise<HistoricalDataPoint[]> {
+    const intervalMap: { [key: string]: string } = {
+        '1M': '1min', '5M': '5min', '15M': '15min', '30M': '30min', '1H': '1h', '4H': '4h', '1D': '1day', '1W': '1week'
+    };
+    const interval = intervalMap[timeframe] || '1h';
+    const commonParams = { symbol: currencyPair, interval, dp: '5', timezone: 'UTC', outputsize: String(outputSize) };
+
+    const [
+        timeSeriesData,
+        ema20Data,
+        ema50Data,
+        rsiData,
+        atrData,
+        macdData,
+        bbandsData
+    ] = await Promise.all([
+        fetchTwelveData('time_series', { ...commonParams, order: 'ASC' }), // Fetch oldest first
+        fetchTwelveData('ema', { ...commonParams, time_period: '20', order: 'ASC' }),
+        fetchTwelveData('ema', { ...commonParams, time_period: '50', order: 'ASC' }),
+        fetchTwelveData('rsi', { ...commonParams, time_period: '14', order: 'ASC' }),
+        fetchTwelveData('atr', { ...commonParams, time_period: '14', order: 'ASC' }),
+        fetchTwelveData('macd', { ...commonParams, fast_period: '12', slow_period: '26', signal_period: '9', order: 'ASC' }),
+        fetchTwelveData('bbands', { ...commonParams, time_period: '20', sd: '2', order: 'ASC' }),
+    ]);
+
+    // Map indicator data by datetime for easy lookup
+    const ema20Map = new Map(ema20Data.values.map((d: any) => [d.datetime, parseFloat(d.ema)]));
+    const ema50Map = new Map(ema50Data.values.map((d: any) => [d.datetime, parseFloat(d.ema)]));
+    const rsiMap = new Map(rsiData.values.map((d: any) => [d.datetime, parseFloat(d.rsi)]));
+    const atrMap = new Map(atrData.values.map((d: any) => [d.datetime, parseFloat(d.atr)]));
+    const macdMap = new Map(macdData.values.map((d: any) => [d.datetime, parseFloat(d.macd_hist)]));
+    const bbandsMap = new Map(bbandsData.values.map((d: any) => [d.datetime, { upper: parseFloat(d.upper_band), lower: parseFloat(d.lower_band) }]));
+
+    const historicalPoints: HistoricalDataPoint[] = timeSeriesData.values.map((candle: any) => {
+        const bbands = bbandsMap.get(candle.datetime);
+        return {
+            time: candle.datetime,
+            currentPrice: parseFloat(candle.close),
+            high: parseFloat(candle.high),
+            low: parseFloat(candle.low),
+            ema20: ema20Map.get(candle.datetime)!,
+            ema50: ema50Map.get(candle.datetime)!,
+            rsi: rsiMap.get(candle.datetime)!,
+            atr: atrMap.get(candle.datetime)!,
+            macdHistogram: macdMap.get(candle.datetime)!,
+            bollingerUpper: bbands?.upper!,
+            bollingerLower: bbands?.lower!,
+        };
+    }).filter((p: HistoricalDataPoint) => 
+        p.ema20 && p.ema50 && p.rsi && p.atr && p.macdHistogram && p.bollingerUpper && p.bollingerLower
+    ); // Filter out points with missing indicator data
+
+    return historicalPoints;
 }
 
 /**

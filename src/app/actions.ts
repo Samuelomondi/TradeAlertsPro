@@ -5,9 +5,10 @@ import { z } from "zod";
 import { generateTradeSignal, type TradeSignalOutput } from "@/ai/flows/signal-generation-gen-ai";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { formatSignalMessage } from "@/lib/utils";
-import { getMarketData } from "@/services/market-data";
+import { getMarketData, getHistoricalData } from "@/services/market-data";
 import { getEconomicNews, type EconomicEvent } from "@/ai/flows/economic-news-flow";
-import type { MarketDataSource } from "@/services/market-data";
+import type { MarketDataSource, HistoricalDataPoint } from "@/services/market-data";
+import type { BacktestResults } from "@/lib/types";
 
 const signalSchema = z.object({
   currencyPair: z.string(),
@@ -97,5 +98,129 @@ export async function getNewsEventsAction(): Promise<EconomicEvent[]> {
     } catch (error) {
         console.error("Error fetching news events:", error);
         return [];
+    }
+}
+
+
+const backtestSchema = z.object({
+  currencyPair: z.string(),
+  timeframe: z.string(),
+  accountBalance: z.coerce.number(),
+  riskPercentage: z.coerce.number(),
+});
+
+
+export async function runBacktestAction(formData: FormData): Promise<{ data?: BacktestResults, error?: string }> {
+    const rawData = Object.fromEntries(formData.entries());
+    const validatedFields = backtestSchema.safeParse(rawData);
+
+    if (!validatedFields.success) {
+        return { error: "Invalid backtest parameters." };
+    }
+
+    const { currencyPair, timeframe, accountBalance, riskPercentage } = validatedFields.data;
+
+    try {
+        const historicalData = await getHistoricalData(currencyPair, timeframe, 500);
+
+        if (historicalData.length < 50) { // Not enough data to be meaningful
+            return { error: "Not enough historical data available to run a meaningful backtest. Try a different timeframe." };
+        }
+
+        let wins = 0;
+        let losses = 0;
+        let totalProfit = 0;
+        let totalWinAmount = 0;
+        let totalLossAmount = 0;
+        let activeTrade: { signal: TradeSignalOutput, type: 'Buy' | 'Sell' } | null = null;
+        
+        for (let i = 1; i < historicalData.length; i++) {
+            const currentCandle = historicalData[i];
+            const previousCandle = historicalData[i - 1];
+
+            // 1. Check if an active trade should be closed
+            if (activeTrade) {
+                let tradeClosed = false;
+                if (activeTrade.type === 'Buy') {
+                    if (currentCandle.low <= activeTrade.signal.stopLoss) {
+                        // Trade lost
+                        losses++;
+                        const lossAmount = (activeTrade.signal.entry - activeTrade.signal.stopLoss) * 100000 * activeTrade.signal.lotSize; // Simplified pip calculation
+                        totalLossAmount += lossAmount;
+                        tradeClosed = true;
+                    } else if (currentCandle.high >= activeTrade.signal.takeProfit) {
+                        // Trade won
+                        wins++;
+                        const winAmount = (activeTrade.signal.takeProfit - activeTrade.signal.entry) * 100000 * activeTrade.signal.lotSize;
+                        totalWinAmount += winAmount;
+                        tradeClosed = true;
+                    }
+                } else { // Sell trade
+                    if (currentCandle.high >= activeTrade.signal.stopLoss) {
+                        // Trade lost
+                        losses++;
+                        const lossAmount = (activeTrade.signal.stopLoss - activeTrade.signal.entry) * 100000 * activeTrade.signal.lotSize;
+                        totalLossAmount += lossAmount;
+                        tradeClosed = true;
+                    } else if (currentCandle.low <= activeTrade.signal.takeProfit) {
+                        // Trade won
+                        wins++;
+                        const winAmount = (activeTrade.signal.entry - activeTrade.signal.takeProfit) * 100000 * activeTrade.signal.lotSize;
+                        totalWinAmount += winAmount;
+                        tradeClosed = true;
+                    }
+                }
+                if (tradeClosed) {
+                    activeTrade = null;
+                }
+            }
+
+            // 2. Check if a new trade should be opened (only if no trade is active)
+            if (!activeTrade) {
+                 const marketDataForSignal: HistoricalDataPoint = {
+                    ...previousCandle,
+                    currentPrice: previousCandle.currentPrice, // Use previous close as current price for signal
+                };
+                
+                const signal = await generateTradeSignal({
+                    currencyPair,
+                    timeframe,
+                    accountBalance,
+                    riskPercentage,
+                    marketData: marketDataForSignal
+                });
+
+                if (signal.signal === 'Buy' || signal.signal === 'Sell') {
+                    activeTrade = { signal, type: signal.signal };
+                }
+            }
+        }
+        
+        const totalTrades = wins + losses;
+        const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
+        const netProfit = totalWinAmount - totalLossAmount;
+        
+        const results: BacktestResults = {
+            currencyPair,
+            timeframe,
+            totalTrades,
+            wins,
+            losses,
+            winRate,
+            netProfit,
+            avgWin: wins > 0 ? totalWinAmount / wins : 0,
+            avgLoss: losses > 0 ? totalLossAmount / losses : 0,
+            barsAnalyzed: historicalData.length
+        };
+
+        return { data: results };
+
+    } catch (error) {
+        console.error("Backtest failed:", error);
+        let errorMessage = "An unknown error occurred during the backtest.";
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        return { error: `Failed to run backtest: ${errorMessage}` };
     }
 }
