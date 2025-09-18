@@ -139,7 +139,7 @@ export async function getMarketData(
   }
 }
 
-export async function getHistoricalData(currencyPair: string, timeframe: string, outputSize = 500): Promise<HistoricalDataPoint[]> {
+export async function getHistoricalData(currencyPair: string, timeframe: string, outputSize = 50): Promise<HistoricalDataPoint[]> {
     if (!API_KEY || API_KEY.startsWith("YOUR_")) {
         throw new Error(`Twelve Data API key is not configured. Historical data cannot be fetched.`);
     }

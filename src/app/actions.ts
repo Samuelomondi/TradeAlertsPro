@@ -121,7 +121,7 @@ export async function runBacktestAction(formData: FormData): Promise<{ data?: Ba
     const { currencyPair, timeframe, accountBalance, riskPercentage } = validatedFields.data;
 
     try {
-        const historicalData = await getHistoricalData(currencyPair, timeframe, 500);
+        const historicalData = await getHistoricalData(currencyPair, timeframe, 50);
 
         if (historicalData.length < 50) { // Not enough data to be meaningful
             return { error: "Not enough historical data available to run a meaningful backtest. Try a different timeframe." };

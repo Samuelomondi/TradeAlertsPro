@@ -128,7 +128,7 @@ export default function Backtester({ accountBalance, riskPercentage }: Backteste
                                 />
                             </div>
                              <p className="text-xs text-muted-foreground pt-2">
-                                The backtest will run on the last 500 data points for the selected timeframe. It uses the current risk settings from the Risk Calculator.
+                                The backtest will run on the last 50 data points for the selected timeframe. It uses the current risk settings from the Risk Calculator.
                             </p>
                             <Button type="submit" disabled={isLoading} className="w-full">
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
