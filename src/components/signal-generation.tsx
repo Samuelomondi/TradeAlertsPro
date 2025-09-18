@@ -91,35 +91,30 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         description: result.error,
       });
     } else if (result.data) {
-        if (result.data.source === 'mock') {
-            setError("Failed to fetch live market data. Please check your API configuration or try again later. No signal was generated.");
-            setDataSource('mock');
-        } else {
-            setGeneratedSignal(result.data.signal);
-            setDataSource(result.data.source ?? null);
-            setMarketSeries(result.data.series ?? null);
-            
-            const toastDescription = `A new ${result.data.signal.signal} signal for ${values.currencyPair} has been generated and sent.`;
+        setGeneratedSignal(result.data.signal);
+        setDataSource(result.data.source);
+        setMarketSeries(result.data.series);
+        
+        const toastDescription = `A new ${result.data.signal.signal} signal for ${values.currencyPair} has been generated and sent.`;
 
-            toast({
-                title: "Signal Generated",
-                description: toastDescription,
-            });
-            
-            const historyEntry: TradeHistoryEntry = {
-                id: new Date().toISOString(),
-                timestamp: formatDate(new Date()),
-                currencyPair: values.currencyPair,
-                timeframe: values.timeframe,
-                signal: result.data.signal,
-                status: 'open',
-            };
-            addTradeToHistory(historyEntry);
-        }
+        toast({
+            title: "Signal Generated",
+            description: toastDescription,
+        });
+        
+        const historyEntry: TradeHistoryEntry = {
+            id: new Date().toISOString(),
+            timestamp: formatDate(new Date()),
+            currencyPair: values.currencyPair,
+            timeframe: values.timeframe,
+            signal: result.data.signal,
+            status: 'open',
+        };
+        addTradeToHistory(historyEntry);
     }
   }
 
-  const showResults = generatedSignal && dataSource === 'live';
+  const showResults = generatedSignal && dataSource === 'live' && marketSeries;
 
   return (
     <div className="space-y-8">
@@ -226,7 +221,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                             </Alert>
                         </div>
                     )}
-                    {showResults && marketSeries ? (
+                    {showResults ? (
                         <MarketChart data={marketSeries} />
                     ) : (
                         !isLoading && !error && <div className="h-full flex items-center justify-center"><p className="text-muted-foreground">Generate a signal to see live market data.</p></div>

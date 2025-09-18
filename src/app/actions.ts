@@ -22,7 +22,7 @@ type GenerateSignalSuccess = {
     series: MarketDataSeries;
 }
 
-export async function generateSignalAction(formData: FormData) {
+export async function generateSignalAction(formData: FormData): Promise<{ data?: GenerateSignalSuccess; error?: string; fields?: any; }> {
   const rawData = Object.fromEntries(formData.entries());
 
   const validatedFields = signalSchema.safeParse(rawData);
@@ -41,9 +41,9 @@ export async function generateSignalAction(formData: FormData) {
     );
 
     // If data source is mock, we don't proceed to generate a signal with it.
-    // We return early so the UI can handle showing an error.
+    // We return an explicit error for the UI to handle.
     if (source === 'mock') {
-        return { data: { source: 'mock' } };
+        return { error: "Failed to fetch live market data. Please check your API configuration or try again later. No signal was generated." };
     }
 
     const signal = await generateTradeSignal({ ...validatedFields.data, marketData: latest });
