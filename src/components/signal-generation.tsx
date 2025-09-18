@@ -81,12 +81,12 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     setIsLoading(false);
 
     if (result.error) {
-      setError(result.error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: result.error,
-      });
+        setError(result.error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: result.error,
+        });
     } else if (result.data) {
         setGeneratedSignal(result.data.signal);
         setDataSource(result.data.source);
@@ -110,7 +110,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     }
   }
 
-  const showResults = generatedSignal;
+  const showResults = generatedSignal && dataSource === 'live';
 
   return (
     <div className="space-y-8 max-w-md mx-auto">

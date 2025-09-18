@@ -34,7 +34,7 @@ import MarketHours from "./market-hours";
 import NewsWarning from "./news-warning";
 import Help from "./help";
 
-import type { TradeHistoryEntry } from "@/lib/types";
+import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
 
 type View = "signals" | "history" | "risk" | "info" | "market" | "news" | "help";
 
@@ -47,6 +47,10 @@ export default function Dashboard() {
   const addTradeToHistory = (entry: TradeHistoryEntry) => {
     setHistory((prev) => [entry, ...prev]);
   };
+
+  const updateTradeStatus = (id: string, status: TradeStatus) => {
+    setHistory(prev => prev.map(trade => trade.id === id ? { ...trade, status } : trade));
+  };
   
   return (
     <SidebarProvider>
@@ -54,7 +58,7 @@ export default function Dashboard() {
         <AppSidebar activeView={activeView} setActiveView={setActiveView} />
         <main className="flex-1 p-4 md:p-8 bg-background">
             {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} />}
-            {activeView === 'history' && <TradeHistory history={history} />}
+            {activeView === 'history' && <TradeHistory history={history} updateTradeStatus={updateTradeStatus} />}
             {activeView === 'risk' && <RiskCalculator accountBalance={accountBalance} riskPercentage={riskPercentage} setAccountBalance={setAccountBalance} setRiskPercentage={setRiskPercentage} />}
             {activeView === 'info' && <BotInfo />}
             {activeView === 'market' && <MarketHours />}
