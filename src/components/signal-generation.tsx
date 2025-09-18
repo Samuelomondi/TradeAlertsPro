@@ -122,8 +122,6 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     // Pass API keys from settings
     formData.append("geminiApiKey", settings.geminiApiKey || '');
     formData.append("twelveDataApiKey", settings.twelveDataApiKey || '');
-    if (settings.telegramBotToken) formData.append("telegramBotToken", settings.telegramBotToken);
-    if (settings.telegramChatId) formData.append("telegramChatId", settings.telegramChatId);
 
 
     const result = await generateSignalAction(formData);
@@ -168,7 +166,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         addTradeToHistory(historyEntry);
 
         try {
-            const storedSignal: StoredSignal = { signal, source: result.data.source, series: result.data.series, inputs: values, timestamp };
+            const storedSignal: StoredSignal = { signal, source: result.data.source, series: result.data.series || [], inputs: values, timestamp };
             localStorage.setItem(LAST_SIGNAL_STORAGE_KEY, JSON.stringify(storedSignal));
         } catch (storageError) {
             console.error("Failed to save last signal to localStorage", storageError);

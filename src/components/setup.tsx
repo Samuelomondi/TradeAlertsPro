@@ -25,14 +25,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useSettings, type AppSettings } from './settings-provider';
 import { useToast } from '@/hooks/use-toast';
-import { KeyRound, Waves } from 'lucide-react';
+import { KeyRound, Waves, Bell } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 const formSchema = z.object({
   geminiApiKey: z.string().min(1, 'Gemini API Key is required.'),
   twelveDataApiKey: z.string().min(1, 'Twelve Data API Key is required.'),
-  telegramBotToken: z.string().optional(),
-  telegramChatId: z.string().optional(),
 });
 
 export default function Setup() {
@@ -44,8 +42,6 @@ export default function Setup() {
     defaultValues: {
         geminiApiKey: settings.geminiApiKey || '',
         twelveDataApiKey: settings.twelveDataApiKey || '',
-        telegramBotToken: settings.telegramBotToken || '',
-        telegramChatId: settings.telegramChatId || '',
     },
   });
 
@@ -119,42 +115,14 @@ export default function Setup() {
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="telegramBotToken"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Telegram Bot Token (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Needed for Telegram notifications"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="telegramChatId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Telegram Chat ID (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Needed for Telegram notifications"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
+                <Alert className="mt-6">
+                    <Bell className="h-4 w-4" />
+                    <AlertTitle>Telegram Notifications</AlertTitle>
+                    <AlertDescription>
+                        Telegram notifications are enabled by default and will be sent automatically for live signals. No additional setup is required.
+                    </AlertDescription>
+                </Alert>
             </CardContent>
             <CardFooter>
               <Button type="submit" className="w-full">

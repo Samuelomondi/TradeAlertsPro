@@ -6,8 +6,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 export type AppSettings = {
   geminiApiKey: string | null;
   twelveDataApiKey: string | null;
-  telegramBotToken: string | null;
-  telegramChatId: string | null;
 };
 
 type SettingsContextType = {
@@ -21,8 +19,6 @@ const SETTINGS_STORAGE_KEY = 'tradeAlertSettings';
 const defaultSettings: AppSettings = {
   geminiApiKey: null,
   twelveDataApiKey: null,
-  telegramBotToken: null,
-  telegramChatId: null,
 };
 
 const SettingsContext = createContext<SettingsContextType>({
