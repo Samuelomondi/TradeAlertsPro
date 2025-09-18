@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -54,7 +55,7 @@ export default function MarketHours() {
           Live status of major foreign exchange markets. Current local time: {localTime}
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {markets.map((market) => {
           const isOpen = getMarketStatus(market, currentUtcHour);
           return (

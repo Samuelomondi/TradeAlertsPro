@@ -125,7 +125,7 @@ export default function NewsWarning() {
                   </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleFetchSentiment} disabled={isLoadingSentiment} className="w-full sm:w-auto mt-4 sm:mt-0 self-end">
+            <Button onClick={handleFetchSentiment} disabled={isLoadingSentiment} className="w-full sm:w-auto mt-4 sm:mt-0 sm:self-end">
               {isLoadingSentiment ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
               Analyze Sentiment
             </Button>
