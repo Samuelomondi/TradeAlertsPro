@@ -54,6 +54,7 @@ type StoredSignal = {
     signal: TradeSignal;
     source: MarketDataSource;
     inputs: FormValues;
+    timestamp: string;
 };
 
 const LAST_SIGNAL_STORAGE_KEY = 'lastGeneratedSignal';
@@ -64,16 +65,18 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   const [dataSource, setDataSource] = useState<MarketDataSource | null>(null);
   const [lastInputs, setLastInputs] = useState<FormValues | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [generationTimestamp, setGenerationTimestamp] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     try {
       const savedSignal = localStorage.getItem(LAST_SIGNAL_STORAGE_KEY);
       if (savedSignal) {
-        const { signal, source, inputs } = JSON.parse(savedSignal) as StoredSignal;
+        const { signal, source, inputs, timestamp } = JSON.parse(savedSignal) as StoredSignal;
         setGeneratedSignal(signal);
         setDataSource(source);
         setLastInputs(inputs);
+        setGenerationTimestamp(timestamp);
       }
     } catch (error) {
       console.error("Failed to parse last signal from localStorage", error);
@@ -94,6 +97,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     setDataSource(null);
     setLastInputs(null);
     setError(null);
+    setGenerationTimestamp(null);
 
     const formData = new FormData();
     Object.entries(values).forEach(([key, value]) => {
@@ -115,9 +119,12 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         });
     } else if (result.data) {
         const signal = result.data.signal;
+        const timestamp = new Date().toISOString();
+
         setGeneratedSignal(signal);
         setDataSource(result.data.source);
         setLastInputs(values);
+        setGenerationTimestamp(timestamp);
         
         const toastDescription = `A new ${signal.signal} signal for ${values.currencyPair} has been generated.`;
 
@@ -129,8 +136,8 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
 
         const historyEntry: TradeHistoryEntry = {
-            id: new Date().toISOString(),
-            timestamp: formatDate(new Date()),
+            id: timestamp,
+            timestamp: formatDate(new Date(timestamp)),
             currencyPair: values.currencyPair,
             timeframe: values.timeframe,
             signal: signal,
@@ -141,7 +148,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         addTradeToHistory(historyEntry);
 
         try {
-            const storedSignal: StoredSignal = { signal, source: result.data.source, inputs: values };
+            const storedSignal: StoredSignal = { signal, source: result.data.source, inputs: values, timestamp };
             localStorage.setItem(LAST_SIGNAL_STORAGE_KEY, JSON.stringify(storedSignal));
         } catch (storageError) {
             console.error("Failed to save last signal to localStorage", storageError);
@@ -149,7 +156,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     }
   }
 
-  const showResults = generatedSignal && lastInputs;
+  const showResults = generatedSignal && lastInputs && generationTimestamp;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -242,7 +249,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
 
             {showResults && !isLoading && !error &&(
                 <div className="animate-in fade-in-50 duration-500 h-full">
-                    <GeneratedSignalCard signal={generatedSignal} inputs={lastInputs} dataSource={dataSource} />
+                    <GeneratedSignalCard signal={generatedSignal} inputs={lastInputs} dataSource={dataSource} timestamp={generationTimestamp} />
                 </div>
             )}
         </div>
@@ -250,7 +257,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   );
 }
 
-const GeneratedSignalCard = ({ signal, inputs, dataSource }: { signal: TradeSignal, inputs: FormValues, dataSource: MarketDataSource | null }) => {
+const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp }: { signal: TradeSignal, inputs: FormValues, dataSource: MarketDataSource | null, timestamp: string }) => {
     const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
     
     return (
@@ -270,7 +277,7 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource }: { signal: TradeSign
                     </span>
                 </CardTitle>
                 <div className="flex justify-between items-baseline">
-                    <CardDescription>{`Generated at ${formatDate(new Date())}`}</CardDescription>
+                    <CardDescription>{`Generated at ${formatDate(new Date(timestamp))}`}</CardDescription>
                     {dataSource && (
                         <span className={cn(
                             "text-xs font-semibold px-2 py-1 rounded-full",
@@ -320,4 +327,5 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
     </div>
 );
 
+    
     
