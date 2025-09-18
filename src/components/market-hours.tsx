@@ -24,6 +24,12 @@ function getMarketStatus(market: Market, currentHour: number) {
   }
 }
 
+function formatUtcHourToLocal(utcHour: number, baseDate: Date) {
+    const date = new Date(baseDate);
+    date.setUTCHours(utcHour, 0, 0, 0);
+    return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 export default function MarketHours() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -33,13 +39,19 @@ export default function MarketHours() {
   }, []);
 
   const currentUtcHour = currentTime.getUTCHours();
+  
+  const localTime = currentTime.toLocaleTimeString(undefined, {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+  });
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Market Hours</CardTitle>
         <CardDescription>
-          Live status of major foreign exchange markets. Current UTC time: {currentTime.toUTCString().slice(17, 22)}
+          Live status of major foreign exchange markets. Current local time: {localTime}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -53,7 +65,7 @@ export default function MarketHours() {
                 {isOpen ? 'Open' : 'Closed'}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                {String(market.openUtc).padStart(2, '0')}:00 - {String(market.closeUtc).padStart(2, '0')}:00 UTC
+                {formatUtcHourToLocal(market.openUtc, currentTime)} - {formatUtcHourToLocal(market.closeUtc, currentTime)}
               </p>
             </Card>
           );

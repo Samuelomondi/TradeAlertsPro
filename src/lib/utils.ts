@@ -16,8 +16,7 @@ export function formatDate(date: Date) {
         minute: '2-digit',
         second: '2-digit',
         hour12: false,
-        timeZone: 'UTC'
-    }) + ' UTC';
+    });
 }
 
 export function formatSignalMessage(signal: TradeSignal, currencyPair: string, timeframe: string, source: MarketDataSource): string {
