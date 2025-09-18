@@ -11,7 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ArrowDown, Check, X, RotateCcw } from "lucide-react";
+import { ArrowUp, ArrowDown, Check, X, RotateCcw, CheckCircle, XCircle } from "lucide-react";
 import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -40,12 +40,12 @@ export default function TradeHistory({ history, updateTradeStatus }: TradeHistor
             <TableRow>
               <TableHead>Timestamp</TableHead>
               <TableHead>Pair</TableHead>
-              <TableHead>Timeframe</TableHead>
               <TableHead>Signal</TableHead>
               <TableHead>Entry</TableHead>
               <TableHead>SL</TableHead>
               <TableHead>TP</TableHead>
               <TableHead>Lot Size</TableHead>
+              <TableHead>Confirmations</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -62,9 +62,8 @@ export default function TradeHistory({ history, updateTradeStatus }: TradeHistor
                 const config = statusConfig[trade.status];
                 return (
                     <TableRow key={trade.id}>
-                    <TableCell>{trade.timestamp}</TableCell>
-                    <TableCell>{trade.currencyPair}</TableCell>
-                    <TableCell>{trade.timeframe}</TableCell>
+                    <TableCell className="text-xs">{trade.timestamp}</TableCell>
+                    <TableCell>{trade.currencyPair}<br/><span className="text-xs text-muted-foreground">{trade.timeframe}</span></TableCell>
                     <TableCell>
                         <div className={`flex items-center gap-2 ${trade.signal.signal === 'Buy' ? 'text-green-600' : 'text-red-600'}`}>
                         {trade.signal.signal === 'Buy' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
@@ -75,6 +74,12 @@ export default function TradeHistory({ history, updateTradeStatus }: TradeHistor
                     <TableCell>{trade.signal.stopLoss.toFixed(5)}</TableCell>
                     <TableCell>{trade.signal.takeProfit.toFixed(5)}</TableCell>
                     <TableCell>{trade.signal.lotSize.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <ConfirmationItem label="MACD" confirmed={trade.signal.macdConfirmation} />
+                        <ConfirmationItem label="BB" confirmed={trade.signal.bollingerConfirmation} />
+                      </div>
+                    </TableCell>
                     <TableCell>
                         <Badge variant={config.variant as any} className={cn(config.className)}>{config.label}</Badge>
                     </TableCell>
@@ -95,3 +100,10 @@ export default function TradeHistory({ history, updateTradeStatus }: TradeHistor
     </Card>
   );
 }
+
+const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: boolean }) => (
+    <div className="flex items-center gap-1 text-xs" title={`${label} Confirmation`}>
+        {confirmed ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
+        <span className="font-medium sr-only">{label}</span>
+    </div>
+);
