@@ -14,6 +14,11 @@ export const MarketDataSchema = z.object({
 });
 
 export type MarketData = z.infer<typeof MarketDataSchema>;
+export type MarketDataSource = 'live' | 'mock';
+export type MarketDataResponse = {
+    data: MarketData,
+    source: MarketDataSource
+};
 
 const API_KEY = process.env.TWELVE_DATA_API_KEY;
 const BASE_URL = 'https://api.twelvedata.com';
@@ -56,12 +61,12 @@ function getMostRecentValue(data: any, key: string) {
  *
  * @param currencyPair The currency pair (e.g., 'EUR/USD').
  * @param timeframe The timeframe (e.g., '1H').
- * @returns A promise that resolves to the market data.
+ * @returns A promise that resolves to the market data and its source.
  */
 export async function getMarketData(
   currencyPair: string,
   timeframe: string
-): Promise<MarketData> {
+): Promise<MarketDataResponse> {
   const intervalMap: { [key: string]: string } = {
       '1M': '1min', '5M': '5min', '15M': '15min', '30M': '30min', '1H': '1h', '4H': '4h', '1D': '1day', '1W': '1week'
   };
@@ -91,7 +96,7 @@ export async function getMarketData(
     const currentPrice = parseFloat(priceData.price);
     if (!currentPrice) throw new Error('Could not fetch current price.');
 
-    return {
+    const marketData = {
       currentPrice,
       ema20: getMostRecentValue(ema20Data, 'ema'),
       ema50: getMostRecentValue(ema50Data, 'ema'),
@@ -101,11 +106,13 @@ export async function getMarketData(
       bollingerUpper: getMostRecentValue(bbandsData, 'upper_band'),
       bollingerLower: getMostRecentValue(bbandsData, 'lower_band'),
     };
+    return { data: marketData, source: 'live' };
   } catch (error) {
      console.error('Error fetching market data from Twelve Data:', error);
      // Fallback to mock data if the API fails
      console.log('Falling back to mock data.');
-     return generateMockMarketData(currencyPair);
+     const mockData = generateMockMarketData(currencyPair);
+     return { data: mockData, source: 'mock' };
   }
 }
 

@@ -8,12 +8,13 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {getMarketData, MarketDataSchema} from '@/services/market-data';
+import {MarketData, MarketDataSchema} from '@/services/market-data';
 import {z} from 'genkit';
 
 const TradeSignalInputSchema = z.object({
   currencyPair: z.string().describe('The currency pair to analyze (e.g., EUR/USD).'),
   timeframe: z.string().describe('The timeframe for analysis (e.g., 1H, 4H, 1D).'),
+  marketData: MarketDataSchema,
 });
 
 export type TradeSignalInput = z.infer<typeof TradeSignalInputSchema>;
@@ -36,7 +37,7 @@ export async function generateTradeSignal(input: TradeSignalInput): Promise<Trad
 
 const prompt = ai.definePrompt({
   name: 'tradeSignalPrompt',
-  input: {schema: z.intersection(TradeSignalInputSchema, MarketDataSchema)},
+  input: {schema: z.intersection(TradeSignalInputSchema.omit({marketData: true}), MarketDataSchema)},
   output: {schema: TradeSignalOutputSchema},
   prompt: `You are an expert trading signal generator.
 Analyze the provided technical indicator values for the given currency pair and timeframe to create a trade signal.
@@ -77,11 +78,14 @@ const generateTradeSignalFlow = ai.defineFlow(
     outputSchema: TradeSignalOutputSchema,
   },
   async input => {
-    // Fetch market data from the service
-    const marketData = await getMarketData(input.currencyPair, input.timeframe);
+    // Market data is now passed into the flow
+    const combinedInput = {
+      ...input,
+      ...input.marketData,
+    };
 
     // Combine input and market data to call the prompt
-    const {output} = await prompt({...input, ...marketData});
+    const {output} = await prompt(combinedInput);
     return output!;
   }
 );

@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CURRENCY_PAIRS, TIMEFRAMES } from "@/lib/constants";
 import type { TradeSignal, TradeHistoryEntry } from "@/lib/types";
 import { cn, formatDate } from "@/lib/utils";
+import type { MarketDataSource } from "@/services/market-data";
 
 const formSchema = z.object({
   currencyPair: z.string().min(1, "Currency pair is required."),
@@ -46,6 +47,7 @@ type SignalGenerationProps = {
 export default function SignalGeneration({ addTradeToHistory }: SignalGenerationProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSignal, setGeneratedSignal] = useState<TradeSignal | null>(null);
+  const [dataSource, setDataSource] = useState<MarketDataSource | null>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -59,6 +61,7 @@ export default function SignalGeneration({ addTradeToHistory }: SignalGeneration
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setGeneratedSignal(null);
+    setDataSource(null);
     const formData = new FormData();
     Object.entries(values).forEach(([key, value]) => {
       formData.append(key, value);
@@ -75,10 +78,19 @@ export default function SignalGeneration({ addTradeToHistory }: SignalGeneration
       });
     } else if (result.data) {
       setGeneratedSignal(result.data);
+      setDataSource(result.source ?? null);
+      
+      let toastDescription = `A new ${result.data.signal} signal for ${values.currencyPair} has been generated and sent.`;
+      if (result.source === 'mock') {
+        toastDescription += " (Using MOCK data)";
+      }
+
       toast({
         title: "Signal Generated",
-        description: `A new ${result.data.signal} signal for ${values.currencyPair} has been generated and sent.`,
+        description: toastDescription,
+        variant: result.source === 'mock' ? 'destructive' : 'default',
       });
+      
       const historyEntry: TradeHistoryEntry = {
         id: new Date().toISOString(),
         timestamp: formatDate(new Date()),
@@ -168,7 +180,7 @@ export default function SignalGeneration({ addTradeToHistory }: SignalGeneration
         )}
         {generatedSignal && (
             <div className="animate-in fade-in-50 duration-500">
-                <GeneratedSignalCard signal={generatedSignal} inputs={form.getValues()} />
+                <GeneratedSignalCard signal={generatedSignal} inputs={form.getValues()} dataSource={dataSource} />
             </div>
         )}
       </div>
@@ -176,7 +188,7 @@ export default function SignalGeneration({ addTradeToHistory }: SignalGeneration
   );
 }
 
-const GeneratedSignalCard = ({ signal, inputs }: { signal: TradeSignal, inputs: z.infer<typeof formSchema> }) => {
+const GeneratedSignalCard = ({ signal, inputs, dataSource }: { signal: TradeSignal, inputs: z.infer<typeof formSchema>, dataSource: MarketDataSource | null }) => {
     const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
     
     return (
@@ -195,7 +207,17 @@ const GeneratedSignalCard = ({ signal, inputs }: { signal: TradeSignal, inputs: 
                         {signal.signal}
                     </span>
                 </CardTitle>
-                <CardDescription>{`Generated at ${formatDate(new Date())}`}</CardDescription>
+                <div className="flex justify-between items-baseline">
+                    <CardDescription>{`Generated at ${formatDate(new Date())}`}</CardDescription>
+                    {dataSource && (
+                        <span className={cn(
+                            "text-xs font-semibold px-2 py-1 rounded-full",
+                            dataSource === 'live' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        )}>
+                            Data: {dataSource.toUpperCase()}
+                        </span>
+                    )}
+                </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
