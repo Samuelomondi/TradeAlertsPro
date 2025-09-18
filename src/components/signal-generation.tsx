@@ -29,13 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, CheckCircle, XCircle, ArrowUp, ArrowDown } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, ArrowUp, ArrowDown, TriangleAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CURRENCY_PAIRS, TIMEFRAMES } from "@/lib/constants";
 import type { TradeSignal, TradeHistoryEntry } from "@/lib/types";
 import { cn, formatDate } from "@/lib/utils";
 import type { MarketDataSource, MarketDataSeries } from "@/services/market-data";
 import MarketChart from "./market-chart";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 
 const formSchema = z.object({
   currencyPair: z.string().min(1, "Currency pair is required."),
@@ -53,6 +54,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   const [generatedSignal, setGeneratedSignal] = useState<TradeSignal | null>(null);
   const [dataSource, setDataSource] = useState<MarketDataSource | null>(null);
   const [marketSeries, setMarketSeries] = useState<MarketDataSeries | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -68,6 +70,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     setGeneratedSignal(null);
     setDataSource(null);
     setMarketSeries(null);
+    setError(null);
 
     const formData = new FormData();
     Object.entries(values).forEach(([key, value]) => {
@@ -81,38 +84,42 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     setIsLoading(false);
 
     if (result.error) {
+      setError(result.error);
       toast({
         variant: "destructive",
         title: "Error",
         description: result.error,
       });
     } else if (result.data) {
-      setGeneratedSignal(result.data.signal);
-      setDataSource(result.data.source ?? null);
-      setMarketSeries(result.data.series ?? null);
-      
-      let toastDescription = `A new ${result.data.signal.signal} signal for ${values.currencyPair} has been generated and sent.`;
-      if (result.data.source === 'mock') {
-        toastDescription += " (Using MOCK data)";
-      }
+        if (result.data.source === 'mock') {
+            setError("Failed to fetch live market data. Please check your API configuration or try again later. No signal was generated.");
+            setDataSource('mock');
+        } else {
+            setGeneratedSignal(result.data.signal);
+            setDataSource(result.data.source ?? null);
+            setMarketSeries(result.data.series ?? null);
+            
+            const toastDescription = `A new ${result.data.signal.signal} signal for ${values.currencyPair} has been generated and sent.`;
 
-      toast({
-        title: "Signal Generated",
-        description: toastDescription,
-        variant: result.data.source === 'mock' ? 'destructive' : 'default',
-      });
-      
-      const historyEntry: TradeHistoryEntry = {
-        id: new Date().toISOString(),
-        timestamp: formatDate(new Date()),
-        currencyPair: values.currencyPair,
-        timeframe: values.timeframe,
-        signal: result.data.signal,
-        status: 'open',
-      };
-      addTradeToHistory(historyEntry);
+            toast({
+                title: "Signal Generated",
+                description: toastDescription,
+            });
+            
+            const historyEntry: TradeHistoryEntry = {
+                id: new Date().toISOString(),
+                timestamp: formatDate(new Date()),
+                currencyPair: values.currencyPair,
+                timeframe: values.timeframe,
+                signal: result.data.signal,
+                status: 'open',
+            };
+            addTradeToHistory(historyEntry);
+        }
     }
   }
+
+  const showResults = generatedSignal && dataSource === 'live';
 
   return (
     <div className="space-y-8">
@@ -122,7 +129,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                 <CardHeader>
                 <CardTitle>Generate Trade Signal</CardTitle>
                 <CardDescription>
-                    Select a pair and timeframe. The chart will update and a signal will be generated.
+                    Select a pair and timeframe. Live market data will be fetched and a signal will be generated.
                 </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -191,7 +198,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                         <p className="ml-4 text-lg">Generating...</p>
                     </Card>
                 )}
-                {generatedSignal && (
+                {showResults && (
                     <div className="animate-in fade-in-50 duration-500">
                         <GeneratedSignalCard signal={generatedSignal} inputs={form.getValues()} dataSource={dataSource} />
                     </div>
@@ -205,13 +212,24 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                     {isLoading && !marketSeries && (
                         <div className="h-full flex flex-col items-center justify-center">
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            <p className="ml-4 text-lg mt-4">Fetching Market Data...</p>
+                            <p className="ml-4 text-lg mt-4">Fetching Live Market Data...</p>
                         </div>
                     )}
-                    {marketSeries ? (
+                    {error && (
+                        <div className="h-full flex items-center justify-center p-4">
+                            <Alert variant="destructive">
+                                <TriangleAlert className="h-4 w-4" />
+                                <AlertTitle>Data Fetching Failed</AlertTitle>
+                                <AlertDescription>
+                                    {error}
+                                </AlertDescription>
+                            </Alert>
+                        </div>
+                    )}
+                    {showResults && marketSeries ? (
                         <MarketChart data={marketSeries} />
                     ) : (
-                        !isLoading && <div className="h-full flex items-center justify-center"><p className="text-muted-foreground">Generate a signal to see market data.</p></div>
+                        !isLoading && !error && <div className="h-full flex items-center justify-center"><p className="text-muted-foreground">Generate a signal to see live market data.</p></div>
                     )}
                  </CardContent>
             </Card>

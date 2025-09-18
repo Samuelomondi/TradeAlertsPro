@@ -39,6 +39,13 @@ export async function generateSignalAction(formData: FormData) {
       validatedFields.data.currencyPair,
       validatedFields.data.timeframe
     );
+
+    // If data source is mock, we don't proceed to generate a signal with it.
+    // We return early so the UI can handle showing an error.
+    if (source === 'mock') {
+        return { data: { source: 'mock' } };
+    }
+
     const signal = await generateTradeSignal({ ...validatedFields.data, marketData: latest });
     
     if (signal) {
