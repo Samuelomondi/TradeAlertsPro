@@ -3,14 +3,19 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
-import { PanelLeft } from "lucide-react"
+import { PanelLeft, X } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
@@ -18,6 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -198,7 +204,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -206,6 +212,12 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
+            <SheetHeader className="p-2">
+              <VisuallyHidden>
+                <SheetTitle>Sidebar</SheetTitle>
+              </VisuallyHidden>
+              <SidebarClose />
+            </SheetHeader>
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
         </Sheet>
@@ -284,6 +296,32 @@ const SidebarTrigger = React.forwardRef<
   )
 })
 SidebarTrigger.displayName = "SidebarTrigger"
+
+const SidebarClose = React.forwardRef<
+  React.ElementRef<typeof Button>,
+  React.ComponentProps<typeof Button>
+>(({ className, onClick, ...props }, ref) => {
+  const { toggleSidebar } = useSidebar()
+
+  return (
+    <Button
+      ref={ref}
+      data-sidebar="close"
+      variant="ghost"
+      size="icon"
+      className={cn("h-7 w-7", className)}
+      onClick={(event) => {
+        onClick?.(event)
+        toggleSidebar()
+      }}
+      {...props}
+    >
+      <X />
+      <span className="sr-only">Close Sidebar</span>
+    </Button>
+  )
+})
+SidebarClose.displayName = "SidebarClose"
 
 const SidebarRail = React.forwardRef<
   HTMLButtonElement,
@@ -737,6 +775,7 @@ SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
 export {
   Sidebar,
+  SidebarClose,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
@@ -761,3 +800,5 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
+    
