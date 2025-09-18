@@ -88,24 +88,28 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
             description: result.error,
         });
     } else if (result.data) {
-        setGeneratedSignal(result.data.signal);
+        const signal = result.data.signal;
+        setGeneratedSignal(signal);
         setDataSource(result.data.source);
         
-        const toastDescription = `A new ${result.data.signal.signal} signal for ${values.currencyPair} has been generated.`;
+        const toastDescription = `A new ${signal.signal} signal for ${values.currencyPair} has been generated.`;
 
         toast({
             title: "Signal Generated",
             description: toastDescription,
         });
         
+        const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
+
         const historyEntry: TradeHistoryEntry = {
             id: new Date().toISOString(),
             timestamp: formatDate(new Date()),
             currencyPair: values.currencyPair,
             timeframe: values.timeframe,
-            signal: result.data.signal,
+            signal: signal,
             status: 'open',
             source: result.data.source,
+            rrr: rrr,
         };
         addTradeToHistory(historyEntry);
     }

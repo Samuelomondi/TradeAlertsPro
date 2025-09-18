@@ -84,6 +84,7 @@ export default function TradeHistory({ history, updateTradeStatus, clearHistory,
                 <TableHead>SL</TableHead>
                 <TableHead>TP</TableHead>
                 <TableHead>Lot Size</TableHead>
+                <TableHead>RRR</TableHead>
                 <TableHead>Confirmations</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -92,7 +93,7 @@ export default function TradeHistory({ history, updateTradeStatus, clearHistory,
             <TableBody>
                 {history.length === 0 ? (
                 <TableRow>
-                    <TableCell colSpan={10} className="text-center h-24">
+                    <TableCell colSpan={11} className="text-center h-24">
                     No trade signals generated yet.
                     </TableCell>
                 </TableRow>
@@ -113,6 +114,7 @@ export default function TradeHistory({ history, updateTradeStatus, clearHistory,
                         <TableCell>{trade.signal.stopLoss.toFixed(5)}</TableCell>
                         <TableCell>{trade.signal.takeProfit.toFixed(5)}</TableCell>
                         <TableCell>{trade.signal.lotSize.toFixed(2)}</TableCell>
+                        <TableCell>{trade.rrr}</TableCell>
                         <TableCell>
                         <div className="flex items-center gap-2">
                             <ConfirmationItem label="MACD" confirmed={trade.signal.macdConfirmation} />

@@ -14,4 +14,5 @@ export type TradeHistoryEntry = {
     signal: TradeSignal;
     status: TradeStatus;
     source: MarketDataSource;
+    rrr: string;
 };
