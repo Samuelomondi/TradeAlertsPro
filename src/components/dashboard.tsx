@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -12,7 +11,6 @@ import {
   PanelLeft,
   Rss,
   TriangleAlert,
-  Waves,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -45,6 +43,23 @@ const TRADE_HISTORY_STORAGE_KEY = "tradeHistory";
 type DashboardProps = {
   botInfo: React.ReactNode;
 };
+
+const CustomIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        {...props}
+    >
+        <path d="M3 3v18h18" />
+        <path d="M7 12l5-5 5 5" fill="hsl(var(--primary) / 0.2)" stroke="hsl(var(--primary))"/>
+        <path d="M7 16l5-5 5 5" fill="hsl(var(--primary) / 0.5)" stroke="hsl(var(--primary))"/>
+    </svg>
+);
 
 export default function Dashboard({ botInfo }: DashboardProps) {
   const [activeView, setActiveView] = useState<View>("signals");
@@ -96,7 +111,7 @@ export default function Dashboard({ botInfo }: DashboardProps) {
         <main className="flex-1 p-4 md:p-8 bg-background">
             <header className="flex items-center justify-between md:hidden mb-4 border-b pb-4">
                 <div className="flex items-center gap-2">
-                    <Waves className="w-8 h-8 text-primary" />
+                    <CustomIcon className="w-8 h-8 text-primary" />
                     <h1 className="text-xl font-semibold text-primary">TradeAlert</h1>
                 </div>
                 <SidebarTrigger />
@@ -136,7 +151,7 @@ function AppSidebar({ activeView, setActiveView }: { activeView: View; setActive
     <Sidebar>
       <SidebarHeader>
         <div className="hidden md:flex items-center gap-2">
-            <Waves className="w-8 h-8 text-primary" />
+            <CustomIcon className="w-8 h-8 text-primary" />
             <h1 className="text-xl font-semibold text-primary">TradeAlert</h1>
         </div>
       </SidebarHeader>

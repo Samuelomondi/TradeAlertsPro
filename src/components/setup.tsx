@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -25,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useSettings, type AppSettings } from './settings-provider';
 import { useToast } from '@/hooks/use-toast';
-import { KeyRound, Waves, Bell, Send, Eye, EyeOff } from 'lucide-react';
+import { KeyRound, Bell, Send, Eye, EyeOff } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 const formSchema = z.object({
@@ -33,6 +32,24 @@ const formSchema = z.object({
   twelveDataApiKey: z.string().min(1, 'Twelve Data API Key is required.'),
   telegramChatId: z.string().optional(),
 });
+
+const CustomIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        {...props}
+    >
+        <path d="M3 3v18h18" />
+        <path d="M7 12l5-5 5 5" fill="hsl(var(--primary) / 0.2)" stroke="hsl(var(--primary))"/>
+        <path d="M7 16l5-5 5 5" fill="hsl(var(--primary) / 0.5)" stroke="hsl(var(--primary))"/>
+    </svg>
+);
+
 
 export default function Setup() {
   const { settings, setSettings } = useSettings();
@@ -63,7 +80,7 @@ export default function Setup() {
       <Card className="w-full max-w-2xl">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center gap-2 mb-2">
-            <Waves className="w-10 h-10 text-primary" />
+            <CustomIcon className="w-10 h-10 text-primary" />
           </div>
           <CardTitle>Welcome to TradeAlert</CardTitle>
           <CardDescription>
