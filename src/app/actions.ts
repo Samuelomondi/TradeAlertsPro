@@ -1,4 +1,3 @@
-
 "use server";
 
 import { z } from "zod";
@@ -8,6 +7,7 @@ import { formatSignalMessage } from "@/lib/utils";
 import { getMarketData } from "@/services/market-data";
 import { getEconomicNews, type EconomicEvent } from "@/ai/flows/economic-news-flow";
 import type { MarketDataSource } from "@/services/market-data";
+import { getNewsSentiment, type NewsSentimentOutput } from "@/ai/flows/news-sentiment-flow";
 
 const signalSchema = z.object({
   currencyPair: z.string(),
@@ -39,8 +39,6 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
       validatedFields.data.timeframe
     );
 
-    // Allow mock data to generate a signal for demonstration purposes.
-    // The UI will indicate that the data source is 'mock'.
     const signal = await generateTradeSignal({ ...validatedFields.data, marketData: marketData.latest });
     
     if (signal && marketData.source === 'live') {
@@ -49,7 +47,6 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
             await sendTelegramMessage(message);
         } catch (telegramError) {
             console.error("Failed to send Telegram message:", telegramError);
-            // Non-fatal, don't block the UI for this
         }
     }
 
@@ -97,5 +94,15 @@ export async function getNewsEventsAction(): Promise<EconomicEvent[]> {
     } catch (error) {
         console.error("Error fetching news events:", error);
         return [];
+    }
+}
+
+export async function getNewsSentimentAction(currencyPair: string): Promise<NewsSentimentOutput | null> {
+    try {
+        const sentiment = await getNewsSentiment({ currencyPair });
+        return sentiment;
+    } catch (error) {
+        console.error(`Error fetching news sentiment for ${currencyPair}:`, error);
+        return null;
     }
 }
