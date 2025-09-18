@@ -173,15 +173,19 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
     </Tooltip>
 );
 
-const DataSourceItem = ({ source }: { source: 'live' | 'mock' }) => (
-    <Tooltip>
-        <TooltipTrigger>
-            <div>
-                {source === 'live' ? <CheckCircle className="w-4 h-4 text-blue-500" /> : <TriangleAlert className="w-4 h-4 text-yellow-500" />}
-            </div>
-        </TooltipTrigger>
-        <TooltipContent>
-            <p>Data Source: {source.toUpperCase()}</p>
-        </TooltipContent>
-    </Tooltip>
-);
+const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
+    if (!source) return null;
+
+    return (
+        <Tooltip>
+            <TooltipTrigger>
+                <div>
+                    {source === 'live' ? <CheckCircle className="w-4 h-4 text-blue-500" /> : <TriangleAlert className="w-4 h-4 text-yellow-500" />}
+                </div>
+            </TooltipTrigger>
+            <TooltipContent>
+                <p>Data Source: {source.toUpperCase()}</p>
+            </TooltipContent>
+        </Tooltip>
+    );
+};
