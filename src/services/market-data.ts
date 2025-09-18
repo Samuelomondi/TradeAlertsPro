@@ -114,7 +114,7 @@ export async function getMarketData(
       fetchTwelveData('ema', { ...commonParams, time_period: '20', outputsize: String(SERIES_OUTPUT_SIZE) }),
       fetchTwelveData('ema', { ...commonParams, time_period: '50', outputsize: String(SERIES_OUTPUT_SIZE) }),
       fetchTwelveData('rsi', { ...commonParams, outputsize: '1', time_period: '14' }),
-      fetchTwelveData('atr', { ...commonParams, outputsize: '1', time_period: '14' }),
+      fetchTwelveData('atr', { ...common_params, outputsize: '1', time_period: '14' }),
       fetchTwelveData('macd', { ...commonParams, outputsize: '1', fast_period: '12', slow_period: '26', signal_period: '9' }),
       fetchTwelveData('bbands', { ...commonParams, outputsize: '1', time_period: '20', sd: '2' }),
     ]);
@@ -162,13 +162,17 @@ export async function getMarketData(
  */
 function generateMockMarketData(currencyPair: string): { latest: LatestIndicators, series: MarketDataSeries } {
     const basePrice = getBasePriceForPair(currencyPair);
-    let currentPrice = basePrice;
+    let currentPrice = basePrice * (1 + (Math.random() - 0.5) * 0.05); // Start at a slight offset
     const series: MarketDataSeries = [];
+    const volatility = 0.001; // Increased volatility factor
 
     // Generate a plausible time series
     for (let i = 0; i < SERIES_OUTPUT_SIZE; i++) {
         const time = new Date(Date.now() - (SERIES_OUTPUT_SIZE - i) * 60 * 60 * 1000).toISOString();
-        currentPrice *= (1 + (Math.random() - 0.5) * 0.005);
+        // Create a more noticeable random walk
+        const movement = (Math.random() - 0.49) * volatility;
+        currentPrice += movement;
+        
         series.push({
             time,
             price: currentPrice,
