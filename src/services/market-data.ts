@@ -168,6 +168,12 @@ function getBasePriceForPair(pair: string): number {
       return 157.0;
     case 'USD/CAD':
       return 1.36;
+    case 'USD/CHF':
+      return 0.91;
+    case 'AUD/USD':
+      return 0.66;
+    case 'NZD/USD':
+      return 0.61;
     default:
       return 1.2;
   }
