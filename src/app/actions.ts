@@ -34,21 +34,20 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
   }
 
   try {
-    const { latest, source } = await getMarketData(
+    const marketData = await getMarketData(
       validatedFields.data.currencyPair,
       validatedFields.data.timeframe
     );
 
-    // If data source is mock, we don't proceed to generate a signal with it.
-    // We return an explicit error for the UI to handle.
-    if (source === 'mock') {
+    // If data source is mock, we return an explicit error for the UI to handle.
+    if (marketData.source === 'mock') {
         return { error: "Failed to fetch live market data. Please check your API configuration or try again later. No signal was generated." };
     }
 
-    const signal = await generateTradeSignal({ ...validatedFields.data, marketData: latest });
+    const signal = await generateTradeSignal({ ...validatedFields.data, marketData: marketData.latest });
     
     if (signal) {
-        const message = formatSignalMessage(signal, validatedFields.data.currencyPair, validatedFields.data.timeframe, source);
+        const message = formatSignalMessage(signal, validatedFields.data.currencyPair, validatedFields.data.timeframe, marketData.source);
         try {
             await sendTelegramMessage(message);
         } catch (telegramError) {
@@ -57,7 +56,7 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
         }
     }
 
-    const response: GenerateSignalSuccess = { signal, source };
+    const response: GenerateSignalSuccess = { signal, source: marketData.source };
     return { data: response };
 
   } catch (error) {
