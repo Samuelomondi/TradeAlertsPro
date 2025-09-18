@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -42,20 +42,45 @@ const formSchema = z.object({
   timeframe: z.string().min(1, "Timeframe is required."),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 type SignalGenerationProps = {
   addTradeToHistory: (entry: TradeHistoryEntry) => void;
   accountBalance: number;
   riskPercentage: number;
 };
 
+type StoredSignal = {
+    signal: TradeSignal;
+    source: MarketDataSource;
+    inputs: FormValues;
+};
+
+const LAST_SIGNAL_STORAGE_KEY = 'lastGeneratedSignal';
+
 export default function SignalGeneration({ addTradeToHistory, accountBalance, riskPercentage }: SignalGenerationProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSignal, setGeneratedSignal] = useState<TradeSignal | null>(null);
   const [dataSource, setDataSource] = useState<MarketDataSource | null>(null);
+  const [lastInputs, setLastInputs] = useState<FormValues | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  useEffect(() => {
+    try {
+      const savedSignal = localStorage.getItem(LAST_SIGNAL_STORAGE_KEY);
+      if (savedSignal) {
+        const { signal, source, inputs } = JSON.parse(savedSignal) as StoredSignal;
+        setGeneratedSignal(signal);
+        setDataSource(source);
+        setLastInputs(inputs);
+      }
+    } catch (error) {
+      console.error("Failed to parse last signal from localStorage", error);
+    }
+  }, []);
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       currencyPair: "USD/CAD",
@@ -63,10 +88,11 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: FormValues) {
     setIsLoading(true);
     setGeneratedSignal(null);
     setDataSource(null);
+    setLastInputs(null);
     setError(null);
 
     const formData = new FormData();
@@ -91,6 +117,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         const signal = result.data.signal;
         setGeneratedSignal(signal);
         setDataSource(result.data.source);
+        setLastInputs(values);
         
         const toastDescription = `A new ${signal.signal} signal for ${values.currencyPair} has been generated.`;
 
@@ -112,10 +139,17 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
             rrr: rrr,
         };
         addTradeToHistory(historyEntry);
+
+        try {
+            const storedSignal: StoredSignal = { signal, source: result.data.source, inputs: values };
+            localStorage.setItem(LAST_SIGNAL_STORAGE_KEY, JSON.stringify(storedSignal));
+        } catch (storageError) {
+            console.error("Failed to save last signal to localStorage", storageError);
+        }
     }
   }
 
-  const showResults = generatedSignal;
+  const showResults = generatedSignal && lastInputs;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -208,7 +242,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
 
             {showResults && !isLoading && !error &&(
                 <div className="animate-in fade-in-50 duration-500 h-full">
-                    <GeneratedSignalCard signal={generatedSignal} inputs={form.getValues()} dataSource={dataSource} />
+                    <GeneratedSignalCard signal={generatedSignal} inputs={lastInputs} dataSource={dataSource} />
                 </div>
             )}
         </div>
@@ -216,7 +250,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   );
 }
 
-const GeneratedSignalCard = ({ signal, inputs, dataSource }: { signal: TradeSignal, inputs: z.infer<typeof formSchema>, dataSource: MarketDataSource | null }) => {
+const GeneratedSignalCard = ({ signal, inputs, dataSource }: { signal: TradeSignal, inputs: FormValues, dataSource: MarketDataSource | null }) => {
     const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
     
     return (
@@ -285,3 +319,5 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
         <span className="font-medium">{label}</span>
     </div>
 );
+
+    
