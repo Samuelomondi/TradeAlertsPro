@@ -39,6 +39,7 @@ import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import MarketChart from "./market-chart";
+import { Separator } from "./ui/separator";
 
 
 const formSchema = z.object({
@@ -435,8 +436,8 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <div className="flex items-center gap-1.5 text-xs">
-                                            <ConfirmationItem label="MACD" confirmed={trade.signal.macdConfirmation} />
-                                            <ConfirmationItem label="Bollinger" confirmed={trade.signal.bollingerConfirmation} />
+                                            <ConfirmationItem confirmed={trade.signal.macdConfirmation} />
+                                            <ConfirmationItem confirmed={trade.signal.bollingerConfirmation} />
                                             <DataSourceItem source={trade.source} />
                                         </div>
                                         <Badge 
@@ -459,6 +460,18 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
                     </div>
                 )}
                 </TooltipProvider>
+                {recentTrades.length > 0 && (
+                    <>
+                        <Separator className="my-4" />
+                        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                            <span className="font-semibold">Legend:</span>
+                            <div className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Confirmed</div>
+                            <div className="flex items-center gap-1"><XCircle className="w-3.5 h-3.5 text-red-500" /> Not Confirmed</div>
+                            <div className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-blue-500" /> Live Data</div>
+                            <div className="flex items-center gap-1"><TriangleAlert className="w-3.5 h-3.5 text-yellow-500" /> Mock Data</div>
+                        </div>
+                    </>
+                )}
             </CardContent>
         </Card>
     )
@@ -471,16 +484,16 @@ const InfoItem = ({ label, value }: { label: string; value: string }) => (
     </div>
 );
 
-const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: boolean }) => (
+const ConfirmationItem = ({ label, confirmed }: { label?: string; confirmed: boolean }) => (
      <Tooltip>
         <TooltipTrigger asChild>
              <div className="flex items-center gap-1">
-                <span className="text-muted-foreground font-medium">{label}</span>
+                {label && <span className="text-muted-foreground font-medium">{label}</span>}
                 {confirmed ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
             </div>
         </TooltipTrigger>
         <TooltipContent>
-            <p>{label} {confirmed ? 'Confirmed' : 'Not Confirmed'}</p>
+            <p>{label || 'Confirmation'}{' '}{confirmed ? 'Confirmed' : 'Not Confirmed'}</p>
         </TooltipContent>
     </Tooltip>
 );
