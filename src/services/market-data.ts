@@ -14,11 +14,21 @@ export const LatestIndicatorsSchema = z.object({
   bollingerLower: z.number(),
 });
 
+export const MarketDataSeriesSchema = z.object({
+    time: z.string(),
+    price: z.number(),
+    ema20: z.number().optional(),
+    ema50: z.number().optional(),
+});
+
+
 export type LatestIndicators = z.infer<typeof LatestIndicatorsSchema>;
+export type MarketDataSeries = z.infer<typeof MarketDataSeriesSchema>;
 export type MarketDataSource = 'live' | 'mock';
 
 export type MarketDataResponse = {
     latest: LatestIndicators,
+    series: MarketDataSeries[],
     source: MarketDataSource
 };
 
@@ -81,16 +91,17 @@ export async function getMarketData(
   // Clear check for API key before making any calls.
   if (!API_KEY || API_KEY.startsWith("YOUR_")) {
     console.warn('Twelve Data API key is not configured. Falling back to mock data.');
-    const { latest } = generateMockMarketData(currencyPair);
-    return { latest, source: 'mock' };
+    const { latest, series } = generateMockMarketData(currencyPair);
+    return { latest, series, source: 'mock' };
   }
 
   const intervalMap: { [key: string]: string } = {
       '1M': '1min', '5M': '5min', '15M': '15min', '30M': '30min', '1H': '1h', '4H': '4h', '1D': '1day', '1W': '1week'
   };
   const interval = intervalMap[timeframe] || '1h';
+  const outputsize = '50';
   
-  const commonParams = { symbol: currencyPair, interval, dp: '5', timezone: 'UTC' };
+  const commonParams = { symbol: currencyPair, interval, dp: '5', timezone: 'UTC', outputsize };
   
   try {
     const [
@@ -100,15 +111,17 @@ export async function getMarketData(
       rsiData,
       atrData,
       macdData,
-      bbandsData
+      bbandsData,
+      timeSeriesData
     ] = await Promise.all([
       fetchTwelveData('price', { ...commonParams }),
-      fetchTwelveData('ema', { ...commonParams, time_period: '20', outputsize: '1' }),
-      fetchTwelveData('ema', { ...commonParams, time_period: '50', outputsize: '1' }),
-      fetchTwelveData('rsi', { ...commonParams, outputsize: '1', time_period: '14' }),
-      fetchTwelveData('atr', { ...commonParams, outputsize: '1', time_period: '14' }),
-      fetchTwelveData('macd', { ...commonParams, outputsize: '1', fast_period: '12', slow_period: '26', signal_period: '9' }),
-      fetchTwelveData('bbands', { ...commonParams, outputsize: '1', time_period: '20', sd: '2' }),
+      fetchTwelveData('ema', { ...commonParams, time_period: '20' }),
+      fetchTwelveData('ema', { ...commonParams, time_period: '50' }),
+      fetchTwelveData('rsi', { ...commonParams, time_period: '14' }),
+      fetchTwelveData('atr', { ...commonParams, time_period: '14' }),
+      fetchTwelveData('macd', { ...commonParams, fast_period: '12', slow_period: '26', signal_period: '9' }),
+      fetchTwelveData('bbands', { ...commonParams, time_period: '20', sd: '2' }),
+      fetchTwelveData('time_series', {...commonParams, outputsize})
     ]);
 
     const latest: LatestIndicators = {
@@ -121,13 +134,24 @@ export async function getMarketData(
         bollingerUpper: getMostRecentValue(bbandsData, 'upper_band'),
         bollingerLower: getMostRecentValue(bbandsData, 'lower_band'),
     };
+    
+    const series: MarketDataSeries[] = timeSeriesData.values.map((d: any, i: number) => {
+        const ema20Value = ema20Data.values.find((e: any) => e.datetime === d.datetime);
+        const ema50Value = ema50Data.values.find((e: any) => e.datetime === d.datetime);
+        return {
+            time: d.datetime,
+            price: parseFloat(d.close),
+            ema20: ema20Value ? parseFloat(ema20Value.ema) : undefined,
+            ema50: ema50Value ? parseFloat(ema50Value.ema) : undefined,
+        };
+    });
 
-    return { latest, source: 'live' };
+    return { latest, series, source: 'live' };
   } catch (error) {
      console.error('Error fetching one or more market data indicators from Twelve Data:', error);
      console.log('Falling back to mock data for signal generation.');
-     const { latest } = generateMockMarketData(currencyPair);
-     return { latest, source: 'mock' };
+     const { latest, series } = generateMockMarketData(currencyPair);
+     return { latest, series, source: 'mock' };
   }
 }
 
@@ -136,25 +160,37 @@ export async function getMarketData(
  * @param currencyPair The currency pair to generate data for.
  * @returns Mock market data including latest values and a time series.
  */
-function generateMockMarketData(currencyPair: string): { latest: LatestIndicators } {
+function generateMockMarketData(currencyPair: string): { latest: LatestIndicators, series: MarketDataSeries[] } {
     const basePrice = getBasePriceForPair(currencyPair);
+    
+    const series: MarketDataSeries[] = [];
     let currentPrice = basePrice * (1 + (Math.random() - 0.5) * 0.05); // Start at a slight offset
-    const ema20 = currentPrice * (1 - Math.random() * 0.002);
-    const ema50 = currentPrice * (1 - Math.random() * 0.005);
+
+    for (let i = 0; i < 50; i++) {
+        const time = new Date(Date.now() - i * 60 * 60 * 1000).toISOString(); // Go back `i` hours
+        const price = currentPrice * (1 + (Math.random() - 0.5) * 0.005);
+        series.push({
+            time,
+            price: price,
+            ema20: price * (1 - Math.random() * 0.002),
+            ema50: price * (1 - Math.random() * 0.005),
+        });
+        currentPrice = price;
+    }
 
 
     const latest: LatestIndicators = {
-        currentPrice: currentPrice,
-        ema20: ema20,
-        ema50: ema50,
+        currentPrice: series[0].price,
+        ema20: series[0].ema20!,
+        ema50: series[0].ema50!,
         rsi: 30 + Math.random() * 40,
         atr: basePrice * 0.001 * (1 + Math.random()),
-        macdHistogram: (ema20 - ema50) * (Math.random() * 10),
-        bollingerUpper: ema20 + 2 * (basePrice * 0.001),
-        bollingerLower: ema20 - 2 * (basePrice * 0.001),
+        macdHistogram: (series[0].ema20! - series[0].ema50!) * (Math.random() * 10),
+        bollingerUpper: series[0].ema20! + 2 * (basePrice * 0.001),
+        bollingerLower: series[0].ema20! - 2 * (basePrice * 0.001),
     };
 
-    return { latest };
+    return { latest, series };
 }
 
 

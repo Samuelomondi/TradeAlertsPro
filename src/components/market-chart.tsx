@@ -8,18 +8,20 @@ import {
   CartesianGrid,
   XAxis,
   YAxis,
-  Tooltip
+  Tooltip,
+  Legend,
 } from "recharts"
 
 import {
   ChartContainer,
   ChartTooltipContent,
+  ChartLegendContent,
 } from "@/components/ui/chart"
 import type { MarketDataSeries } from "@/services/market-data"
 import { useTheme } from "next-themes"
 
 type MarketChartProps = {
-  data: MarketDataSeries
+  data: MarketDataSeries[]
 }
 
 export default function MarketChart({ data }: MarketChartProps) {
@@ -46,16 +48,16 @@ export default function MarketChart({ data }: MarketChartProps) {
   const formattedData = data.map(d => ({
     ...d,
     time: new Date(d.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }))
+  })).reverse() // Reverse to show oldest data first
 
-  const allValues = data.flatMap(d => [d.price, d.ema20, d.ema50]).filter(v => v !== undefined) as number[];
+  const allValues = data.flatMap(d => [d.price, d.ema20, d.ema50]).filter(v => v !== undefined && v !== null) as number[];
   const domain: [number, number] = allValues.length > 0 
     ? [Math.min(...allValues) * 0.998, Math.max(...allValues) * 1.002] 
     : [0, 0];
 
 
   return (
-    <ChartContainer config={chartConfig} className="w-full h-full">
+    <ChartContainer config={chartConfig} className="w-full h-64">
       <AreaChart
         accessibilityLayer
         data={formattedData}
@@ -88,6 +90,7 @@ export default function MarketChart({ data }: MarketChartProps) {
           cursor={true}
           content={<ChartTooltipContent indicator="line" />}
         />
+         <Legend content={<ChartLegendContent />} />
         <defs>
             <linearGradient id="fillPrice" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={chartConfig.price.color} stopOpacity={0.8} />
@@ -100,6 +103,7 @@ export default function MarketChart({ data }: MarketChartProps) {
           fill="url(#fillPrice)"
           stroke={chartConfig.price.color}
           stackId="a"
+          name="Price"
         />
         <Area
           dataKey="ema20"
@@ -108,6 +112,7 @@ export default function MarketChart({ data }: MarketChartProps) {
           stroke={chartConfig.ema20.color}
           strokeWidth={2}
           connectNulls
+          name="EMA 20"
         />
          <Area
           dataKey="ema50"
@@ -116,6 +121,7 @@ export default function MarketChart({ data }: MarketChartProps) {
           stroke={chartConfig.ema50.color}
           strokeWidth={2}
           connectNulls
+          name="EMA 50"
         />
       </AreaChart>
     </ChartContainer>

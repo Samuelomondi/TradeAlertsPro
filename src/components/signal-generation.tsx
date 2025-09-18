@@ -34,10 +34,11 @@ import { useToast } from "@/hooks/use-toast";
 import { CURRENCY_PAIRS, TIMEFRAMES } from "@/lib/constants";
 import type { TradeSignal, TradeHistoryEntry, TradeStatus } from "@/lib/types";
 import { cn, formatDate } from "@/lib/utils";
-import type { MarketDataSource } from "@/services/market-data";
+import type { MarketDataSource, MarketDataSeries } from "@/services/market-data";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import MarketChart from "./market-chart";
 
 
 const formSchema = z.object({
@@ -58,6 +59,7 @@ type SignalGenerationProps = {
 type StoredSignal = {
     signal: TradeSignal;
     source: MarketDataSource;
+    series: MarketDataSeries[];
     inputs: FormValues;
     timestamp: string;
 };
@@ -68,6 +70,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSignal, setGeneratedSignal] = useState<TradeSignal | null>(null);
   const [dataSource, setDataSource] = useState<MarketDataSource | null>(null);
+  const [chartSeries, setChartSeries] = useState<MarketDataSeries[]>([]);
   const [lastInputs, setLastInputs] = useState<FormValues | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [generationTimestamp, setGenerationTimestamp] = useState<string | null>(null);
@@ -77,9 +80,10 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     try {
       const savedSignal = localStorage.getItem(LAST_SIGNAL_STORAGE_KEY);
       if (savedSignal) {
-        const { signal, source, inputs, timestamp } = JSON.parse(savedSignal) as StoredSignal;
+        const { signal, source, series, inputs, timestamp } = JSON.parse(savedSignal) as StoredSignal;
         setGeneratedSignal(signal);
         setDataSource(source);
+        setChartSeries(series);
         setLastInputs(inputs);
         setGenerationTimestamp(timestamp);
       }
@@ -100,6 +104,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     setIsLoading(true);
     setGeneratedSignal(null);
     setDataSource(null);
+    setChartSeries([]);
     setLastInputs(null);
     setError(null);
     setGenerationTimestamp(null);
@@ -128,6 +133,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
 
         setGeneratedSignal(signal);
         setDataSource(result.data.source);
+        setChartSeries(result.data.series);
         setLastInputs(values);
         setGenerationTimestamp(timestamp);
         
@@ -153,7 +159,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         addTradeToHistory(historyEntry);
 
         try {
-            const storedSignal: StoredSignal = { signal, source: result.data.source, inputs: values, timestamp };
+            const storedSignal: StoredSignal = { signal, source: result.data.source, series: result.data.series, inputs: values, timestamp };
             localStorage.setItem(LAST_SIGNAL_STORAGE_KEY, JSON.stringify(storedSignal));
         } catch (storageError) {
             console.error("Failed to save last signal to localStorage", storageError);
@@ -258,7 +264,8 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                     <GeneratedSignalCard 
                         signal={generatedSignal} 
                         inputs={lastInputs} 
-                        dataSource={dataSource} 
+                        dataSource={dataSource}
+                        chartSeries={chartSeries}
                         timestamp={generationTimestamp}
                         history={history}
                         updateTradeStatus={updateTradeStatus}
@@ -295,10 +302,11 @@ const signalStyles = {
     }
 }
 
-const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp, history, updateTradeStatus }: { 
+const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestamp, history, updateTradeStatus }: { 
     signal: TradeSignal, 
     inputs: FormValues, 
     dataSource: MarketDataSource | null, 
+    chartSeries: MarketDataSeries[],
     timestamp: string,
     history: TradeHistoryEntry[],
     updateTradeStatus: (id: string, status: TradeStatus) => void;
@@ -321,7 +329,7 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp, history, u
     
     return (
         <Card className={cn(
-            "border-2 h-full",
+            "border-2 h-full flex flex-col",
             styles.card
         )}>
             <CardHeader>
@@ -357,7 +365,9 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp, history, u
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex-1 flex flex-col gap-4">
+                {chartSeries.length > 0 && <div className="flex-1"><MarketChart data={chartSeries} /></div>}
+                
                 <div className="p-4 bg-primary/10 rounded-lg text-center">
                     <p className="text-sm text-primary font-semibold">Lot Size</p>
                     <p className="text-3xl font-bold text-primary">{signal.lotSize.toFixed(2)}</p>
@@ -473,7 +483,3 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
         </TooltipContent>
     </Tooltip>
 );
-
-    
-
-    

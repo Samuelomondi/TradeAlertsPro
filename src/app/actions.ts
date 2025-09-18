@@ -1,3 +1,4 @@
+
 "use server";
 
 import { z } from "zod";
@@ -6,7 +7,7 @@ import { sendTelegramMessage } from "@/lib/telegram";
 import { formatSignalMessage } from "@/lib/utils";
 import { getMarketData } from "@/services/market-data";
 import { getEconomicNews, type EconomicEvent } from "@/ai/flows/economic-news-flow";
-import type { MarketDataSource } from "@/services/market-data";
+import type { MarketDataSource, MarketDataSeries } from "@/services/market-data";
 import { getNewsSentiment, type NewsSentimentOutput } from "@/ai/flows/news-sentiment-flow";
 
 const signalSchema = z.object({
@@ -16,9 +17,10 @@ const signalSchema = z.object({
   riskPercentage: z.coerce.number(),
 });
 
-type GenerateSignalSuccess = {
+export type GenerateSignalSuccess = {
     signal: TradeSignalOutput;
     source: MarketDataSource;
+    series: MarketDataSeries[];
 }
 
 export async function generateSignalAction(formData: FormData): Promise<{ data?: GenerateSignalSuccess; error?: string; fields?: any; }> {
@@ -50,7 +52,7 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
         }
     }
 
-    const response: GenerateSignalSuccess = { signal, source: marketData.source };
+    const response: GenerateSignalSuccess = { signal, source: marketData.source, series: marketData.series };
     return { data: response };
 
   } catch (error) {
