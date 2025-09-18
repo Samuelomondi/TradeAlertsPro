@@ -317,7 +317,7 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp }: { signal
 };
 
 const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
-    const recentTrades = history.slice(0, 2);
+    const recentTrades = history.slice(1, 3);
 
     const statusConfig: { [key in TradeStatus]: { variant: "secondary" | "default" | "destructive", label: string, className?: string } } = {
         open: { variant: "secondary", label: "Open" },
@@ -357,7 +357,7 @@ const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
                 ) : (
                     <div className="flex flex-col items-center justify-center text-center p-6 text-muted-foreground">
                         <Minus className="w-8 h-8 mb-2" />
-                        <p className="text-sm">No recent trades to show.</p>
+                        <p className="text-sm">No prior trades to show.</p>
                     </div>
                 )}
             </CardContent>
@@ -378,3 +378,5 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
         <span className="font-medium">{label}</span>
     </div>
 );
+
+    
