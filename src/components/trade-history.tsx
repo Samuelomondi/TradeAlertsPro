@@ -168,8 +168,8 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
     <Tooltip>
         <TooltipTrigger>
             <div className="flex items-center gap-1 text-xs" title={`${label} Confirmation`}>
+                <span className="font-medium text-muted-foreground">{label}</span>
                 {confirmed ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
-                <span className="font-medium sr-only">{label}</span>
             </div>
         </TooltipTrigger>
         <TooltipContent>

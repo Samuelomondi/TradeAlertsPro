@@ -397,7 +397,7 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center gap-1.5 text-xs">
                                             <ConfirmationItem label="MACD" confirmed={trade.signal.macdConfirmation} />
                                             <ConfirmationItem label="Bollinger" confirmed={trade.signal.bollingerConfirmation} />
                                         </div>
@@ -436,7 +436,8 @@ const InfoItem = ({ label, value }: { label: string; value: string }) => (
 const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: boolean }) => (
      <Tooltip>
         <TooltipTrigger asChild>
-             <div className="flex items-center">
+             <div className="flex items-center gap-1">
+                <span className="text-muted-foreground font-medium">{label}</span>
                 {confirmed ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
             </div>
         </TooltipTrigger>
