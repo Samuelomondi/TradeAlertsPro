@@ -144,52 +144,51 @@ export async function getHistoricalData(currencyPair: string, timeframe: string,
         '1M': '1min', '5M': '5min', '15M': '15min', '30M': '30min', '1H': '1h', '4H': '4h', '1D': '1day', '1W': '1week'
     };
     const interval = intervalMap[timeframe] || '1h';
-    const commonParams = { symbol: currencyPair, interval, dp: '5', timezone: 'UTC', outputsize: String(outputSize) };
+    
+    // Define all indicators to be fetched in a single call
+    const indicators = [
+        "ema:time_period_20",
+        "ema:time_period_50",
+        "rsi:time_period_14",
+        "atr:time_period_14",
+        "macd:fast_period_12,slow_period_26,signal_period_9",
+        "bbands:time_period_20,sd_2"
+    ].join(',');
 
-    const [
-        timeSeriesData,
-        ema20Data,
-        ema50Data,
-        rsiData,
-        atrData,
-        macdData,
-        bbandsData
-    ] = await Promise.all([
-        fetchTwelveData('time_series', { ...commonParams, order: 'ASC' }), // Fetch oldest first
-        fetchTwelveData('ema', { ...commonParams, time_period: '20', order: 'ASC' }),
-        fetchTwelveData('ema', { ...commonParams, time_period: '50', order: 'ASC' }),
-        fetchTwelveData('rsi', { ...commonParams, time_period: '14', order: 'ASC' }),
-        fetchTwelveData('atr', { ...commonParams, time_period: '14', order: 'ASC' }),
-        fetchTwelveData('macd', { ...commonParams, fast_period: '12', slow_period: '26', signal_period: '9', order: 'ASC' }),
-        fetchTwelveData('bbands', { ...commonParams, time_period: '20', sd: '2', order: 'ASC' }),
-    ]);
+    const params = { 
+        symbol: currencyPair, 
+        interval, 
+        dp: '5', 
+        timezone: 'UTC', 
+        outputsize: String(outputSize),
+        order: 'ASC', // Fetch oldest first
+        technical_indicators: indicators
+    };
 
-    // Map indicator data by datetime for easy lookup
-    const ema20Map = new Map(ema20Data.values.map((d: any) => [d.datetime, parseFloat(d.ema)]));
-    const ema50Map = new Map(ema50Data.values.map((d: any) => [d.datetime, parseFloat(d.ema)]));
-    const rsiMap = new Map(rsiData.values.map((d: any) => [d.datetime, parseFloat(d.rsi)]));
-    const atrMap = new Map(atrData.values.map((d: any) => [d.datetime, parseFloat(d.atr)]));
-    const macdMap = new Map(macdData.values.map((d: any) => [d.datetime, parseFloat(d.macd_hist)]));
-    const bbandsMap = new Map(bbandsData.values.map((d: any) => [d.datetime, { upper: parseFloat(d.upper_band), lower: parseFloat(d.lower_band) }]));
+    const data = await fetchTwelveData('time_series', params);
 
-    const historicalPoints: HistoricalDataPoint[] = timeSeriesData.values.map((candle: any) => {
-        const bbands = bbandsMap.get(candle.datetime);
-        return {
-            time: candle.datetime,
-            currentPrice: parseFloat(candle.close),
-            high: parseFloat(candle.high),
-            low: parseFloat(candle.low),
-            ema20: ema20Map.get(candle.datetime)!,
-            ema50: ema50Map.get(candle.datetime)!,
-            rsi: rsiMap.get(candle.datetime)!,
-            atr: atrMap.get(candle.datetime)!,
-            macdHistogram: macdMap.get(candle.datetime)!,
-            bollingerUpper: bbands?.upper!,
-            bollingerLower: bbands?.lower!,
-        };
-    }).filter((p: HistoricalDataPoint) => 
-        p.ema20 && p.ema50 && p.rsi && p.atr && p.macdHistogram && p.bollingerUpper && p.bollingerLower
-    ); // Filter out points with missing indicator data
+    const historicalPoints: HistoricalDataPoint[] = data.values.map((point: any) => ({
+        time: point.datetime,
+        currentPrice: parseFloat(point.close),
+        high: parseFloat(point.high),
+        low: parseFloat(point.low),
+        ema20: point.ema_20 ? parseFloat(point.ema_20) : undefined,
+        ema50: point.ema_50 ? parseFloat(point.ema_50) : undefined,
+        rsi: point.rsi ? parseFloat(point.rsi) : undefined,
+        atr: point.atr ? parseFloat(point.atr) : undefined,
+        macdHistogram: point.macd_hist ? parseFloat(point.macd_hist) : undefined,
+        bollingerUpper: point.upper_band ? parseFloat(point.upper_band) : undefined,
+        bollingerLower: point.lower_band ? parseFloat(point.lower_band) : undefined,
+    })).filter((p: any) => 
+        // Filter out initial data points where indicators might not have a value yet
+        p.ema20 !== undefined && 
+        p.ema50 !== undefined && 
+        p.rsi !== undefined && 
+        p.atr !== undefined && 
+        p.macdHistogram !== undefined && 
+        p.bollingerUpper !== undefined && 
+        p.bollingerLower !== undefined
+    ) as HistoricalDataPoint[];
 
     return historicalPoints;
 }
@@ -235,3 +234,4 @@ function getBasePriceForPair(pair: string): number {
       return 1.2;
   }
 }
+
