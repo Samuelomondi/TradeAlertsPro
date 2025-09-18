@@ -3,3 +3,4 @@ config();
 
 import '@/ai/flows/signal-generation-gen-ai.ts';
 import '@/ai/flows/confirmations-gen-ai.ts';
+import '@/ai/flows/economic-news-flow.ts';

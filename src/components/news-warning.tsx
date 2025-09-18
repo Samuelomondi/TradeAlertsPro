@@ -1,8 +1,27 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { TriangleAlert } from "lucide-react";
+import { TriangleAlert, Loader2 } from "lucide-react";
+import { getNewsEventsAction } from '@/app/actions';
+import type { EconomicEvent } from '@/ai/flows/economic-news-flow';
+import { Skeleton } from './ui/skeleton';
 
 export default function NewsWarning() {
+  const [events, setEvents] = useState<EconomicEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchNews() {
+      setIsLoading(true);
+      const newsEvents = await getNewsEventsAction();
+      setEvents(newsEvents);
+      setIsLoading(false);
+    }
+    fetchNews();
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -18,12 +37,22 @@ export default function NewsWarning() {
         </Alert>
 
         <div className="mt-6">
-            <h3 className="font-semibold mb-2">Key Upcoming Events (Example)</h3>
-            <ul className="list-disc list-inside space-y-2 text-sm">
-                <li><span className="font-semibold">US Non-Farm Payroll:</span> Friday, 08:30 EST</li>
-                <li><span className="font-semibold">ECB Interest Rate Decision:</span> Thursday, 14:00 CET</li>
-                <li><span className="font-semibold">BoJ Policy Statement:</span> Tuesday, 23:50 JST</li>
-            </ul>
+            <h3 className="font-semibold mb-2">Key Upcoming Events (AI-Generated)</h3>
+            {isLoading ? (
+                <div className="space-y-3">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-5 w-full" />
+                    <Skeleton className="h-5 w-2/3" />
+                </div>
+            ) : (
+                <ul className="list-disc list-inside space-y-2 text-sm">
+                    {events.length > 0 ? events.map((event, index) => (
+                        <li key={index}><span className="font-semibold">{event.name}:</span> {event.time}</li>
+                    )) : (
+                        <li>No upcoming high-impact news events found.</li>
+                    )}
+                </ul>
+            )}
         </div>
       </CardContent>
     </Card>

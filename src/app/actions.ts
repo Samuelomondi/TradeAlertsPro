@@ -5,6 +5,7 @@ import { generateTradeSignal } from "@/ai/flows/signal-generation-gen-ai";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { formatSignalMessage } from "@/lib/utils";
 import { getMarketData } from "@/services/market-data";
+import { getEconomicNews, type EconomicEvent } from "@/ai/flows/economic-news-flow";
 
 const signalSchema = z.object({
   currencyPair: z.string(),
@@ -65,4 +66,14 @@ export async function getSystemStatus(): Promise<SystemStatus> {
         twelveData: process.env.TWELVE_DATA_API_KEY && process.env.TWELVE_DATA_API_KEY !== "YOUR_TWELVE_DATA_API_KEY" ? 'Configured' : 'Not Configured',
         telegram: process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN !== "YOUR_TELEGRAM_BOT_TOKEN" ? 'Configured' : 'Not Configured'
     };
+}
+
+export async function getNewsEventsAction(): Promise<EconomicEvent[]> {
+    try {
+        const news = await getEconomicNews();
+        return news.events;
+    } catch (error) {
+        console.error("Error fetching news events:", error);
+        return [];
+    }
 }
