@@ -39,7 +39,6 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
       validatedFields.data.timeframe
     );
 
-    // If data source is mock, we return an explicit error for the UI to handle.
     if (marketData.source === 'mock') {
         return { error: "Failed to fetch live market data. Please check your API configuration or try again later. No signal was generated." };
     }
@@ -52,7 +51,6 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
             await sendTelegramMessage(message);
         } catch (telegramError) {
             console.error("Failed to send Telegram message:", telegramError);
-            // Non-fatal, we can still return the signal to the UI
         }
     }
 
@@ -77,9 +75,9 @@ export interface SystemStatus {
 
 export async function getSystemStatus(): Promise<SystemStatus> {
     return {
-        gemini: process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "YOUR_GEMINI_API_KEY" ? 'Configured' : 'Not Configured',
-        twelveData: process.env.TWELVE_DATA_API_KEY && process.env.TWELVE_DATA_API_KEY !== "YOUR_TWELVE_DATA_API_KEY" ? 'Configured' : 'Not Configured',
-        telegram: process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN !== "YOUR_TELEGRAM_BOT_TOKEN" ? 'Configured' : 'Not Configured'
+        gemini: (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 0) ? 'Configured' : 'Not Configured',
+        twelveData: (process.env.TWELVE_DATA_API_KEY && process.env.TWELVE_DATA_API_KEY.length > 0) ? 'Configured' : 'Not Configured',
+        telegram: (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_BOT_TOKEN.length > 0) ? 'Configured' : 'Not Configured'
     };
 }
 
