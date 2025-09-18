@@ -6,6 +6,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 export type AppSettings = {
   geminiApiKey: string | null;
   twelveDataApiKey: string | null;
+  telegramChatId: string | null;
 };
 
 type SettingsContextType = {
@@ -19,6 +20,7 @@ const SETTINGS_STORAGE_KEY = 'tradeAlertSettings';
 const defaultSettings: AppSettings = {
   geminiApiKey: null,
   twelveDataApiKey: null,
+  telegramChatId: null,
 };
 
 const SettingsContext = createContext<SettingsContextType>({
@@ -48,12 +50,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const setSettings = useCallback((newSettings: AppSettings) => {
     try {
-      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
-      setSettingsState(newSettings);
+      const settingsToSave = { ...settings, ...newSettings };
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsToSave));
+      setSettingsState(settingsToSave);
     } catch (error) {
       console.error('Failed to save settings to localStorage', error);
     }
-  }, []);
+  }, [settings]);
 
   const value = { settings, setSettings, loaded };
 

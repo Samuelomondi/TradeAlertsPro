@@ -119,9 +119,12 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     formData.append("accountBalance", String(accountBalance));
     formData.append("riskPercentage", String(riskPercentage));
 
-    // Pass API keys from settings
+    // Pass API keys and settings
     formData.append("geminiApiKey", settings.geminiApiKey || '');
     formData.append("twelveDataApiKey", settings.twelveDataApiKey || '');
+    if (settings.telegramChatId) {
+        formData.append("telegramChatId", settings.telegramChatId);
+    }
 
 
     const result = await generateSignalAction(formData);
@@ -466,7 +469,7 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
                     </div>
                 )}
                 </TooltipProvider>
-                {recentTrades.length > 0 && (
+                {history.length > 1 && (
                     <>
                         <Separator className="my-4" />
                         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">

@@ -17,6 +17,7 @@ const signalSchema = z.object({
   riskPercentage: z.coerce.number(),
   geminiApiKey: z.string().min(1, "Gemini API Key is required."),
   twelveDataApiKey: z.string().min(1, "Twelve Data API Key is required."),
+  telegramChatId: z.string().optional(),
 });
 
 export type GenerateSignalSuccess = {
@@ -26,7 +27,6 @@ export type GenerateSignalSuccess = {
 }
 
 const TELEGRAM_BOT_TOKEN = '8266783870:AAFSZzVpmeLykifAq1lLp5vS_rgz-_USiGA';
-const TELEGRAM_CHAT_ID = '531957996';
 const HOURLY_TIMEFRAMES = ['1H', '4H', '1D', '1W'];
 
 export async function generateSignalAction(formData: FormData): Promise<{ data?: GenerateSignalSuccess; error?: string; fields?: any; }> {
@@ -41,7 +41,7 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
     };
   }
   
-  const { geminiApiKey, twelveDataApiKey, ...tradeInputs } = validatedFields.data;
+  const { geminiApiKey, twelveDataApiKey, telegramChatId, ...tradeInputs } = validatedFields.data;
 
   try {
     const marketData = await getMarketData(
@@ -52,10 +52,10 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
 
     const signal = await generateTradeSignal({ ...tradeInputs, marketData: marketData.latest });
     
-    if (signal && marketData.source === 'live' && HOURLY_TIMEFRAMES.includes(tradeInputs.timeframe)) {
+    if (signal && marketData.source === 'live' && HOURLY_TIMEFRAMES.includes(tradeInputs.timeframe) && telegramChatId) {
         const message = formatSignalMessage(signal, tradeInputs.currencyPair, tradeInputs.timeframe, marketData.source);
         try {
-            await sendTelegramMessage(message, { botToken: TELEGRAM_BOT_TOKEN, chatId: TELEGRAM_CHAT_ID });
+            await sendTelegramMessage(message, { botToken: TELEGRAM_BOT_TOKEN, chatId: telegramChatId });
         } catch (telegramError) {
             console.error("Failed to send Telegram message:", telegramError);
         }

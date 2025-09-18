@@ -26,11 +26,12 @@ import { Button } from '@/components/ui/button';
 import { useSettings, type AppSettings } from './settings-provider';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { KeyRound, Info, Bell } from 'lucide-react';
+import { KeyRound, Info, Bell, Send } from 'lucide-react';
 
 const formSchema = z.object({
   geminiApiKey: z.string().min(1, 'Gemini API Key is required.'),
   twelveDataApiKey: z.string().min(1, 'Twelve Data API Key is required.'),
+  telegramChatId: z.string().optional(),
 });
 
 export default function BotInfo() {
@@ -42,6 +43,7 @@ export default function BotInfo() {
     defaultValues: {
         geminiApiKey: settings.geminiApiKey || '',
         twelveDataApiKey: settings.twelveDataApiKey || '',
+        telegramChatId: settings.telegramChatId || '',
     },
   });
 
@@ -58,7 +60,7 @@ export default function BotInfo() {
       <CardHeader>
         <CardTitle>Application Settings</CardTitle>
         <CardDescription>
-          Manage the API keys required for the application to function.
+          Manage the API keys and settings required for the application to function.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
@@ -123,8 +125,28 @@ export default function BotInfo() {
                 <Bell className="h-4 w-4" />
                 <AlertTitle>Telegram Notifications</AlertTitle>
                 <AlertDescription>
-                    Notifications for live signals are pre-configured to be sent automatically. No setup is required.
+                    To receive trade signals on Telegram, enter your personal Chat ID below. This is optional.
                 </AlertDescription>
+                <FormField
+                control={form.control}
+                name="telegramChatId"
+                render={({ field }) => (
+                    <FormItem className="mt-4">
+                    <FormLabel>Telegram Chat ID (Optional)</FormLabel>
+                    <FormControl>
+                        <div className="relative">
+                        <Send className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Enter your Telegram Chat ID"
+                            className="pl-8"
+                            {...field}
+                        />
+                        </div>
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
             </Alert>
           </CardContent>
           <CardFooter>

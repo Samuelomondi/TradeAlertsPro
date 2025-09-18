@@ -25,12 +25,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useSettings, type AppSettings } from './settings-provider';
 import { useToast } from '@/hooks/use-toast';
-import { KeyRound, Waves, Bell } from 'lucide-react';
+import { KeyRound, Waves, Bell, Send } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 const formSchema = z.object({
   geminiApiKey: z.string().min(1, 'Gemini API Key is required.'),
   twelveDataApiKey: z.string().min(1, 'Twelve Data API Key is required.'),
+  telegramChatId: z.string().optional(),
 });
 
 export default function Setup() {
@@ -42,6 +43,7 @@ export default function Setup() {
     defaultValues: {
         geminiApiKey: settings.geminiApiKey || '',
         twelveDataApiKey: settings.twelveDataApiKey || '',
+        telegramChatId: settings.telegramChatId || '',
     },
   });
 
@@ -118,10 +120,30 @@ export default function Setup() {
               </div>
                 <Alert className="mt-6">
                     <Bell className="h-4 w-4" />
-                    <AlertTitle>Telegram Notifications</AlertTitle>
+                    <AlertTitle>Telegram Notifications (Optional)</AlertTitle>
                     <AlertDescription>
-                        Telegram notifications are enabled by default and will be sent automatically for live signals. No additional setup is required.
+                        To receive notifications, provide your Telegram Chat ID. You can get this by messaging a bot like UserInfoBot on Telegram.
                     </AlertDescription>
+                     <FormField
+                        control={form.control}
+                        name="telegramChatId"
+                        render={({ field }) => (
+                            <FormItem className="mt-4">
+                            <FormLabel>Telegram Chat ID</FormLabel>
+                            <FormControl>
+                                <div className="relative">
+                                <Send className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Enter your Telegram Chat ID"
+                                    className="pl-8"
+                                    {...field}
+                                />
+                                </div>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
                 </Alert>
             </CardContent>
             <CardFooter>
