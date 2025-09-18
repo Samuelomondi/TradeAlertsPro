@@ -1,4 +1,5 @@
 
+
 'use server';
 /**
  * @fileOverview Generates trade signals using a GenAI model based on a currency pair and timeframe.
@@ -93,8 +94,8 @@ const generateTradeSignalFlow = ai.defineFlow(
     }
 
     // Now, get the confirmations from the specialized agent
-    const macdCondition = `Histogram is ${coreSignal.trend === 'Bullish' ? 'positive' : 'negative'}`;
-    const bollingerCondition = `Price is ${coreSignal.signal === 'Buy' ? 'near lower band' : 'near upper band'}`;
+    const macdCondition = `For a ${coreSignal.signal} signal, the MACD Histogram is ${input.marketData.macdHistogram.toFixed(5)}. A positive value supports a Buy, a negative value supports a Sell.`;
+    const bollingerCondition = `For a ${coreSignal.signal} signal, the current price is ${input.marketData.currentPrice.toFixed(5)} and the bands are at ${input.marketData.bollingerLower.toFixed(5)} (lower) and ${input.marketData.bollingerUpper.toFixed(5)} (upper). Price near the lower band supports a Buy, price near the upper band supports a Sell.`;
 
     const confirmations = await confirmTradeSignal({
         macdCondition,
@@ -109,3 +110,4 @@ const generateTradeSignalFlow = ai.defineFlow(
     };
   }
 );
+
