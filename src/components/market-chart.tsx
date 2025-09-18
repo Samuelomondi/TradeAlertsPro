@@ -50,12 +50,6 @@ export default function MarketChart({ data }: MarketChartProps) {
     time: new Date(d.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   })).reverse() // Reverse to show oldest data first
 
-  const allValues = data.flatMap(d => [d.price, d.ema20, d.ema50]).filter(v => v !== undefined && v !== null) as number[];
-  const domain: [number, number] = allValues.length > 0 
-    ? [Math.min(...allValues) * 0.998, Math.max(...allValues) * 1.002] 
-    : [0, 0];
-
-
   return (
     <ChartContainer config={chartConfig} className="w-full h-64">
       <AreaChart
@@ -82,7 +76,7 @@ export default function MarketChart({ data }: MarketChartProps) {
             tickLine={false}
             axisLine={false}
             tickMargin={8}
-            domain={domain}
+            domain={['dataMin - (dataMin * 0.002)', 'dataMax + (dataMax * 0.002)']}
             tickFormatter={(value) => typeof value === 'number' ? value.toFixed(5) : ''}
             fontSize={12}
         />
@@ -127,3 +121,4 @@ export default function MarketChart({ data }: MarketChartProps) {
     </ChartContainer>
   )
 }
+
