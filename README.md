@@ -7,6 +7,7 @@ TradeAlert is a web application designed to assist forex traders by generating t
 - **Logic-Based Signal Generation**: Input a currency pair and timeframe to get a trade signal based on a consistent, deterministic set of rules. The system analyzes technical indicators (EMA, RSI, ATR) to generate a signal with an entry, stop loss, take profit, and a calculated lot size.
 - **Telegram Notifications**: Automatically sends generated trade signals to a designated Telegram chat, allowing you to receive trade ideas on the go.
 - **Persistent Trade History**: Keeps a running log of all generated signals, saved in your browser's local storage. You can update the status of each trade (Won, Lost, Open) to track your performance over time.
+- **Trade Performance Dashboard**: A visual summary of your trading performance, including total trades, wins, losses, and your win rate, calculated from your trade history.
 - **Risk Settings**: Configure your account balance and risk percentage to automatically calculate the appropriate position size for every trade signal.
 - **Live Market Hours**: A live dashboard showing the open/closed status of major forex trading sessions (London, New York, Tokyo) to help you understand the current market environment.
 - **Comprehensive News & Sentiment Analysis**: A multi-faceted view that includes:
