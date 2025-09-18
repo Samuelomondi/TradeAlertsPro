@@ -11,7 +11,7 @@ import {
   PanelLeft,
   Rss,
   TriangleAlert,
-  Waveform,
+  Waves,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -82,7 +82,7 @@ function AppSidebar({ activeView, setActiveView }: { activeView: View; setActive
       <SidebarHeader>
         <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleSidebar}><PanelLeft /></Button>
-            <Waveform className="w-8 h-8 text-primary" />
+            <Waves className="w-8 h-8 text-primary" />
             <h1 className="text-xl font-semibold text-primary">TradeAlert</h1>
         </div>
       </SidebarHeader>
