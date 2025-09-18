@@ -265,7 +265,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                         signal={generatedSignal} 
                         inputs={lastInputs} 
                         dataSource={dataSource}
-                        chartSeries={chartSeries}
+                        chartSeries={chartSeries || []}
                         timestamp={generationTimestamp}
                         history={history}
                         updateTradeStatus={updateTradeStatus}
@@ -366,7 +366,7 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestam
                 </div>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
-                {chartSeries && chartSeries.length > 0 && <div className="flex-1"><MarketChart data={chartSeries} /></div>}
+                {chartSeries.length > 0 && <div className="flex-1"><MarketChart data={chartSeries} /></div>}
                 
                 <div className="p-4 bg-primary/10 rounded-lg text-center">
                     <p className="text-sm text-primary font-semibold">Lot Size</p>
@@ -393,7 +393,7 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestam
 };
 
 const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistoryEntry[], updateTradeStatus: (id: string, status: TradeStatus) => void; }) => {
-    const recentTrades = history.slice(1, 3);
+    const recentTrades = history.slice(1, 5);
     
     const handleStatusClick = (trade: TradeHistoryEntry) => {
         const currentIndex = statusCycle.indexOf(trade.status);
@@ -416,7 +416,7 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
                     <History className="w-5 h-5" />
                     <span>Recent Trades</span>
                 </CardTitle>
-                <CardDescription>A quick look at your last two signals.</CardDescription>
+                <CardDescription>A quick look at your last four signals.</CardDescription>
             </CardHeader>
             <CardContent>
                 <TooltipProvider>
@@ -437,6 +437,7 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
                                         <div className="flex items-center gap-1.5 text-xs">
                                             <ConfirmationItem label="MACD" confirmed={trade.signal.macdConfirmation} />
                                             <ConfirmationItem label="Bollinger" confirmed={trade.signal.bollingerConfirmation} />
+                                            <DataSourceItem source={trade.source} />
                                         </div>
                                         <Badge 
                                             variant={config.variant} 
@@ -484,4 +485,20 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
     </Tooltip>
 );
 
+const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
+    if (!source) return null;
+
+    return (
+        <Tooltip>
+            <TooltipTrigger>
+                <div>
+                    {source === 'live' ? <CheckCircle className="w-4 h-4 text-blue-500" /> : <TriangleAlert className="w-4 h-4 text-yellow-500" />}
+                </div>
+            </TooltipTrigger>
+            <TooltipContent>
+                <p>Data Source: {source.toUpperCase()}</p>
+            </TooltipContent>
+        </Tooltip>
+    );
+};
     
