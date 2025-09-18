@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -101,7 +102,7 @@ export default function Dashboard({ botInfo }: DashboardProps) {
                 </div>
                 <SidebarTrigger />
             </header>
-            {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} />}
+            {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} history={history} />}
             {activeView === 'history' && (
                 <div className="space-y-8">
                     <TradePerformance history={history} />

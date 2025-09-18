@@ -29,13 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, CheckCircle, XCircle, ArrowUp, ArrowDown, TriangleAlert } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, ArrowUp, ArrowDown, TriangleAlert, History, Minus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CURRENCY_PAIRS, TIMEFRAMES } from "@/lib/constants";
-import type { TradeSignal, TradeHistoryEntry } from "@/lib/types";
+import type { TradeSignal, TradeHistoryEntry, TradeStatus } from "@/lib/types";
 import { cn, formatDate } from "@/lib/utils";
 import type { MarketDataSource } from "@/services/market-data";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Badge } from "./ui/badge";
 
 const formSchema = z.object({
   currencyPair: z.string().min(1, "Currency pair is required."),
@@ -48,6 +49,7 @@ type SignalGenerationProps = {
   addTradeToHistory: (entry: TradeHistoryEntry) => void;
   accountBalance: number;
   riskPercentage: number;
+  history: TradeHistoryEntry[];
 };
 
 type StoredSignal = {
@@ -59,7 +61,7 @@ type StoredSignal = {
 
 const LAST_SIGNAL_STORAGE_KEY = 'lastGeneratedSignal';
 
-export default function SignalGeneration({ addTradeToHistory, accountBalance, riskPercentage }: SignalGenerationProps) {
+export default function SignalGeneration({ addTradeToHistory, accountBalance, riskPercentage, history }: SignalGenerationProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSignal, setGeneratedSignal] = useState<TradeSignal | null>(null);
   const [dataSource, setDataSource] = useState<MarketDataSource | null>(null);
@@ -160,7 +162,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        <div>
+        <div className="space-y-8">
             <Card>
                 <CardHeader>
                 <CardTitle>Generate Trade Signal</CardTitle>
@@ -226,6 +228,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                 </Form>
                 </CardContent>
             </Card>
+            <RecentTradesCard history={history} />
         </div>
         <div className="h-full">
             {isLoading && (
@@ -313,6 +316,55 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp }: { signal
     );
 };
 
+const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
+    const recentTrades = history.slice(0, 2);
+
+    const statusConfig: { [key in TradeStatus]: { variant: "secondary" | "default" | "destructive", label: string, className?: string } } = {
+        open: { variant: "secondary", label: "Open" },
+        won: { variant: "default", className: "bg-green-600 hover:bg-green-700", label: "Won" },
+        lost: { variant: "destructive", label: "Lost" },
+    };
+
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <History className="w-5 h-5" />
+                    <span>Recent Trades</span>
+                </CardTitle>
+                <CardDescription>A quick look at your last two signals.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {recentTrades.length > 0 ? (
+                    <div className="space-y-4">
+                        {recentTrades.map((trade) => {
+                             const config = statusConfig[trade.status];
+                             return (
+                                <div key={trade.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        {trade.signal.signal === 'Buy' ? <ArrowUp className="w-5 h-5 text-green-500" /> : <ArrowDown className="w-5 h-5 text-red-500" />}
+                                        <div>
+                                            <p className="font-semibold">{trade.currencyPair} <span className="font-normal text-muted-foreground">({trade.timeframe})</span></p>
+                                            <p className="text-xs text-muted-foreground">{trade.timestamp}</p>
+                                        </div>
+                                    </div>
+                                    <Badge variant={config.variant} className={cn(config.className)}>{config.label}</Badge>
+                                </div>
+                             )
+                        })}
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center text-center p-6 text-muted-foreground">
+                        <Minus className="w-8 h-8 mb-2" />
+                        <p className="text-sm">No recent trades to show.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    )
+}
+
 const InfoItem = ({ label, value }: { label: string; value: string }) => (
     <div>
         <p className="text-muted-foreground">{label}</p>
@@ -326,6 +378,3 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
         <span className="font-medium">{label}</span>
     </div>
 );
-
-    
-    
