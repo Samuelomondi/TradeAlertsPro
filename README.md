@@ -1,15 +1,16 @@
 # TradeAlert
 
-TradeAlert is a web application designed to assist forex traders by generating trade signals using a combination of technical indicators and generative AI. It provides a dashboard with tools for signal generation, risk management, and market information, and integrates with Telegram to send real-time signal notifications.
+TradeAlert is a web application designed to assist forex traders by generating trade signals using a combination of technical indicators and generative AI. It provides a dashboard with tools for signal generation, risk management, trade history tracking, and crucial market information. It also integrates with Telegram to send real-time signal notifications.
 
 ## Features
 
-- **AI-Powered Signal Generation**: Input technical indicator values (EMA, RSI, MACD, etc.) to have a GenAI model analyze the data and generate a comprehensive trade signal, including entry, stop loss, and take profit levels.
+- **AI-Powered Signal Generation**: Input a currency pair and timeframe to have a GenAI model analyze live technical indicators (EMA, RSI, MACD, Bollinger Bands) and generate a comprehensive trade signal, including entry, stop loss, take profit, and a calculated lot size.
 - **Telegram Notifications**: Automatically sends generated trade signals to a designated Telegram chat, allowing you to receive trade ideas on the go.
-- **Trade History**: Keeps a running log of all generated signals, allowing you to review past performance and analysis.
-- **Risk & Lot Size Calculator**: A handy tool to calculate the appropriate position size for a trade based on your account balance, risk percentage, and stop loss distance.
-- **Market Hours Tracker**: A live dashboard showing the open/closed status of major forex trading sessions (London, New York, Tokyo).
-- **Bot & Environment Info**: A section to display the configuration details of your trading environment (server, login, etc.).
+- **Persistent Trade History**: Keeps a running log of all generated signals, saved in your browser's local storage. You can update the status of each trade (Won, Lost, Open) to track your performance over time.
+- **Risk Settings**: Configure your account balance and risk percentage to automatically calculate the appropriate position size for every trade signal.
+- **Live Market Hours**: A live dashboard showing the open/closed status of major forex trading sessions (London, New York, Tokyo) to help you understand the current market environment.
+- **AI-Generated News Warnings**: An AI-powered view that fetches and displays a list of upcoming high-impact economic events, warning you of potential market volatility.
+- **System Status Dashboard**: A utility panel that checks and displays the configuration status of all required services (Generative AI, Market Data API, Telegram), making it easy to diagnose setup issues.
 - **Built-in Help & FAQ**: An accordion-style FAQ section to answer common questions about how the application works.
 
 ## Tech Stack
@@ -27,6 +28,7 @@ TradeAlert is a web application designed to assist forex traders by generating t
 
 - [Node.js](https://nodejs.org/) (v18 or later)
 - An account with a Generative AI provider (e.g., Google AI Studio) to obtain an API key.
+- A [Twelve Data](https://twelvedata.com/) account for a market data API key.
 - A Telegram Bot and Chat ID for notifications.
 
 ### Installation
@@ -44,20 +46,18 @@ TradeAlert is a web application designed to assist forex traders by generating t
 
 ### Environment Configuration
 
-Create a `.env` file in the root of the project and add the following variables. These are essential for the AI and Telegram functionalities.
+Create a `.env` file in the root of the project and add the following variables. These are essential for the AI, market data, and Telegram functionalities.
 
 ```
 # From your AI provider (e.g., Google AI Studio)
 GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
 
+# From Twelve Data (https://twelvedata.com/)
+TWELVE_DATA_API_KEY="YOUR_TWELVE_DATA_API_KEY"
+
 # From Telegram (create a bot with @BotFather)
 TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
 TELEGRAM_CHAT_ID="YOUR_TELEGRAM_CHAT_ID"
-
-# Optional: For display purposes in the "Bot Info" component
-MT_SERVER="YourMTServer"
-MT_LOGIN="YourMTLogin"
-MT_PASSWORD="YourMTPassword"
 ```
 
 ### Running the Application
@@ -81,6 +81,7 @@ The application will be available at [http://localhost:9002](http://localhost:90
 The application is structured into several key components:
 
 - **Frontend (`src/components`)**: Contains all the React components for the UI, including the dashboard, signal generation form, risk calculator, and more.
-- **AI Flows (`src/ai/flows`)**: These are server-side Genkit files that define the logic for interacting with the generative AI model to create trade signals.
+- **AI Flows (`src/ai/flows`)**: These are server-side Genkit files that define the logic for interacting with the generative AI model to create trade signals and fetch news.
 - **Server Actions (`src/app/actions.ts`)**: Handles form submissions from the client, invokes the AI flows, and triggers Telegram notifications.
+- **Services (`src/services`)**: Contains the logic for fetching live market data from external APIs like Twelve Data.
 - **Configuration (`src/lib`)**: Contains constants, type definitions, and utility functions used throughout the application.
