@@ -48,7 +48,7 @@ type DashboardProps = {
 export default function Dashboard({ botInfo }: DashboardProps) {
   const [activeView, setActiveView] = useState<View>("signals");
   const [history, setHistory] = useState<TradeHistoryEntry[]>([]);
-  const [accountBalance, setAccountBalance] = useState(10000);
+  const [accountBalance, setAccountBalance] = useState(1000);
   const [riskPercentage, setRiskPercentage] = useState(1);
 
   // Load history from localStorage on initial client-side render

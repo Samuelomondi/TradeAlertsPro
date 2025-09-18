@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -69,7 +70,7 @@ export default function RiskCalculator({ accountBalance, riskPercentage, setAcco
                     <FormControl>
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input type="number" placeholder="e.g., 10000" className="pl-8" {...field} />
+                        <Input type="number" placeholder="e.g., 1000" className="pl-8" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
