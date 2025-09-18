@@ -255,7 +255,14 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
 
             {showResults && !isLoading && !error &&(
                 <div className="animate-in fade-in-50 duration-500 h-full">
-                    <GeneratedSignalCard signal={generatedSignal} inputs={lastInputs} dataSource={dataSource} timestamp={generationTimestamp} />
+                    <GeneratedSignalCard 
+                        signal={generatedSignal} 
+                        inputs={lastInputs} 
+                        dataSource={dataSource} 
+                        timestamp={generationTimestamp}
+                        history={history}
+                        updateTradeStatus={updateTradeStatus}
+                    />
                 </div>
             )}
         </div>
@@ -263,8 +270,33 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   );
 }
 
-const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp }: { signal: TradeSignal, inputs: FormValues, dataSource: MarketDataSource | null, timestamp: string }) => {
+const statusCycle: TradeStatus[] = ['open', 'won', 'lost'];
+const statusConfig: { [key in TradeStatus]: { variant: "secondary" | "default" | "destructive", label: string, className?: string } } = {
+    open: { variant: "secondary", label: "Open" },
+    won: { variant: "default", className: "bg-green-600 hover:bg-green-700 text-white", label: "Won" },
+    lost: { variant: "destructive", label: "Lost" },
+};
+
+const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp, history, updateTradeStatus }: { 
+    signal: TradeSignal, 
+    inputs: FormValues, 
+    dataSource: MarketDataSource | null, 
+    timestamp: string,
+    history: TradeHistoryEntry[],
+    updateTradeStatus: (id: string, status: TradeStatus) => void;
+}) => {
     const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
+    
+    const currentTrade = history.find(trade => trade.id === timestamp);
+    const currentStatus = currentTrade?.status || 'open';
+    const config = statusConfig[currentStatus];
+
+    const handleStatusClick = () => {
+        const currentIndex = statusCycle.indexOf(currentStatus);
+        const nextIndex = (currentIndex + 1) % statusCycle.length;
+        const nextStatus = statusCycle[nextIndex];
+        updateTradeStatus(timestamp, nextStatus);
+    };
     
     return (
         <Card className={cn(
@@ -282,16 +314,26 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp }: { signal
                         {signal.signal}
                     </span>
                 </CardTitle>
-                <div className="flex justify-between items-baseline">
+                <div className="flex justify-between items-center">
                     <CardDescription>{`Generated at ${formatDate(new Date(timestamp))}`}</CardDescription>
-                    {dataSource && (
-                        <span className={cn(
-                            "text-xs font-semibold px-2 py-1 rounded-full",
-                            dataSource === 'live' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                        )}>
-                            Data: {dataSource.toUpperCase()}
-                        </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                        {dataSource && (
+                            <span className={cn(
+                                "text-xs font-semibold px-2 py-1 rounded-full",
+                                dataSource === 'live' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            )}>
+                                Data: {dataSource.toUpperCase()}
+                            </span>
+                        )}
+                         <Badge 
+                            variant={config.variant} 
+                            className={cn(config.className, "cursor-pointer")}
+                            onClick={handleStatusClick}
+                            title={`Click to change status (currently ${currentStatus})`}
+                        >
+                            {config.label}
+                        </Badge>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -321,15 +363,7 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, timestamp }: { signal
 
 const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistoryEntry[], updateTradeStatus: (id: string, status: TradeStatus) => void; }) => {
     const recentTrades = history.slice(1, 3);
-
-    const statusConfig: { [key in TradeStatus]: { variant: "secondary" | "default" | "destructive", label: string, className?: string } } = {
-        open: { variant: "secondary", label: "Open" },
-        won: { variant: "default", className: "bg-green-600 hover:bg-green-700 text-white", label: "Won" },
-        lost: { variant: "destructive", label: "Lost" },
-    };
     
-    const statusCycle: TradeStatus[] = ['open', 'won', 'lost'];
-
     const handleStatusClick = (trade: TradeHistoryEntry) => {
         const currentIndex = statusCycle.indexOf(trade.status);
         const nextIndex = (currentIndex + 1) % statusCycle.length;
@@ -411,3 +445,5 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
         </TooltipContent>
     </Tooltip>
 );
+
+    
