@@ -24,6 +24,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   useSidebar,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -81,6 +82,13 @@ export default function Dashboard() {
       <div className="flex min-h-screen">
         <AppSidebar activeView={activeView} setActiveView={setActiveView} />
         <main className="flex-1 p-4 md:p-8 bg-background">
+            <header className="flex items-center justify-between md:hidden mb-4 border-b pb-4">
+                <div className="flex items-center gap-2">
+                    <Waves className="w-8 h-8 text-primary" />
+                    <h1 className="text-xl font-semibold text-primary">TradeAlert</h1>
+                </div>
+                <SidebarTrigger />
+            </header>
             {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} />}
             {activeView === 'history' && <TradeHistory history={history} updateTradeStatus={updateTradeStatus} />}
             {activeView === 'risk' && <RiskCalculator accountBalance={accountBalance} riskPercentage={riskPercentage} setAccountBalance={setAccountBalance} setRiskPercentage={setRiskPercentage} />}
@@ -110,8 +118,7 @@ function AppSidebar({ activeView, setActiveView }: { activeView: View; setActive
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleSidebar}><PanelLeft /></Button>
+        <div className="hidden md:flex items-center gap-2">
             <Waves className="w-8 h-8 text-primary" />
             <h1 className="text-xl font-semibold text-primary">TradeAlert</h1>
         </div>
