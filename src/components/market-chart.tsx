@@ -83,7 +83,7 @@ export default function MarketChart({ data }: MarketChartProps) {
             axisLine={false}
             tickMargin={8}
             domain={domain}
-            tickFormatter={(value) => typeof value === 'number' ? value.toFixed(4) : ''}
+            tickFormatter={(value) => typeof value === 'number' ? value.toFixed(5) : ''}
             fontSize={12}
         />
         <Tooltip
