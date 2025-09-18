@@ -2,14 +2,12 @@
 
 'use server';
 /**
- * @fileOverview Generates trade signals using a GenAI model based on a currency pair and timeframe.
+ * @fileOverview Generates trade signals using a logic-based function based on a currency pair and timeframe.
  *
  * - generateTradeSignal - A function that generates a trade signal.
  * - TradeSignalInput - The input type for the generateTradeSignal function.
  * - TradeSignalOutput - The return type for the generateTradeSignal function.
  */
-
-import {ai} from '@/ai/genkit';
 import {LatestIndicators, LatestIndicatorsSchema} from '@/services/market-data';
 import {z} from 'genkit';
 
@@ -36,65 +34,75 @@ const TradeSignalOutputSchema = z.object({
 
 export type TradeSignalOutput = z.infer<typeof TradeSignalOutputSchema>;
 
+/**
+ * Generates a trade signal based on deterministic technical analysis rules.
+ * @param input The trade signal input containing market data and risk parameters.
+ * @returns A promise that resolves to the generated trade signal.
+ */
 export async function generateTradeSignal(input: TradeSignalInput): Promise<TradeSignalOutput> {
-  return generateTradeSignalFlow(input);
-}
+  const { marketData, accountBalance, riskPercentage, currencyPair } = input;
+  const { currentPrice, ema20, ema50, rsi, atr, macdHistogram, bollingerUpper, bollingerLower } = marketData;
 
-const prompt = ai.definePrompt({
-  name: 'tradeSignalPrompt',
-  input: {schema: TradeSignalInputSchema},
-  output: {schema: TradeSignalOutputSchema},
-  prompt: `You are an expert trading signal generator.
-Analyze the provided technical indicator values for the given currency pair and timeframe to create a trade signal.
-
-Currency Pair: {{{currencyPair}}}
-Timeframe: {{{timeframe}}}
-Account Balance: {{{accountBalance}}}
-Risk Percentage: {{{riskPercentage}}}
-
-Technical Indicators:
-- Current Price: {{{marketData.currentPrice}}}
-- EMA (20): {{{marketData.ema20}}}
-- EMA (50): {{{marketData.ema50}}}
-- RSI (14): {{{marketData.rsi}}}
-- ATR (14): {{{marketData.atr}}}
-- MACD Histogram: {{{marketData.macdHistogram}}}
-- Bollinger Upper Band: {{{marketData.bollingerUpper}}}
-- Bollinger Lower Band: {{{marketData.bollingerLower}}}
-
-Your analysis should consider the following:
-- Trend: Determine the trend based on EMA crossovers (20 above 50 is bullish, 20 below 50 is bearish).
-- RSI:  Over 70 is overbought, below 30 is oversold.
-
-Based on this analysis, provide:
-- Trend (Bullish, Bearish, or Neutral)
-- Signal (Buy, Sell, or Hold)
-- Entry Price (Based on current price and trend)
-- Stop Loss Price (Use ATR to set a logical stop loss)
-- Take Profit Price (Aim for at least a 1.5:1 risk/reward ratio)
-
-Also, provide boolean confirmations for MACD and Bollinger Bands:
-- macdConfirmation: Set to true if the MACD Histogram supports your signal (e.g., positive for a Buy, negative for a Sell).
-- bollingerConfirmation: Set to true if the price location relative to the bands supports your signal (e.g., near the lower band for a Buy, near the upper band for a Sell).
-
-Finally, calculate the lot size for the trade. Assume a standard pip value of $10 per lot.
-The formula is: Lot Size = (Account Balance * (Risk Percentage / 100)) / (Stop Loss in Pips * Pip Value)
-Stop Loss in Pips = abs(Entry Price - Stop Loss Price) * 10000 (for most pairs).
-`,
-});
-
-const generateTradeSignalFlow = ai.defineFlow(
-  {
-    name: 'generateTradeSignalFlow',
-    inputSchema: TradeSignalInputSchema,
-    outputSchema: TradeSignalOutputSchema,
-  },
-  async input => {
-    // Generate the core trade signal first
-    const {output} = await prompt(input);
-    if (!output) {
-        throw new Error("Failed to generate trade signal.");
-    }
-    return output;
+  // 1. Determine Trend
+  let trend: 'Bullish' | 'Bearish' | 'Neutral' = 'Neutral';
+  if (ema20 > ema50) {
+    trend = 'Bullish';
+  } else if (ema20 < ema50) {
+    trend = 'Bearish';
   }
-);
+
+  // 2. Determine Signal
+  let signal: 'Buy' | 'Sell' | 'Hold' = 'Hold';
+  if (trend === 'Bullish' && rsi < 70) { // Trend is up, not overbought
+    signal = 'Buy';
+  } else if (trend === 'Bearish' && rsi > 30) { // Trend is down, not oversold
+    signal = 'Sell';
+  }
+
+  // 3. Calculate Entry, Stop Loss, and Take Profit
+  const entry = currentPrice;
+  let stopLoss = entry;
+  let takeProfit = entry;
+  const riskRewardRatio = 1.5;
+  const atrMultiplier = 1.5; // Standard ATR multiplier for stop loss
+
+  if (signal === 'Buy') {
+    stopLoss = entry - (atr * atrMultiplier);
+    takeProfit = entry + (entry - stopLoss) * riskRewardRatio;
+  } else if (signal === 'Sell') {
+    stopLoss = entry + (atr * atrMultiplier);
+    takeProfit = entry - (stopLoss - entry) * riskRewardRatio;
+  }
+
+  // 4. Calculate Lot Size
+  let lotSize = 0;
+  const riskAmount = accountBalance * (riskPercentage / 100);
+  const stopLossPips = Math.abs(entry - stopLoss) * (currencyPair.includes('JPY') ? 100 : 10000);
+  
+  if (stopLossPips > 0) {
+    const pipValue = 10; // Assume $10 per standard lot
+    lotSize = riskAmount / (stopLossPips * pipValue);
+  }
+  
+  // Handle cases where lot size is too small or large, or zero
+  lotSize = Math.max(0.01, Math.min(lotSize, 100)); // Clamp between 0.01 and 100 lots
+  if (signal === 'Hold') {
+      lotSize = 0;
+  }
+
+  // 5. Determine Confirmations
+  const macdConfirmation = (signal === 'Buy' && macdHistogram > 0) || (signal === 'Sell' && macdHistogram < 0);
+  const bollingerConfirmation = (signal === 'Buy' && currentPrice < ema20) || (signal === 'Sell' && currentPrice > ema20);
+
+
+  return {
+    trend,
+    signal,
+    entry,
+    stopLoss,
+    takeProfit,
+    lotSize,
+    macdConfirmation,
+    bollingerConfirmation,
+  };
+}
