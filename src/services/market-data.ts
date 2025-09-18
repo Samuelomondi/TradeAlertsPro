@@ -98,45 +98,52 @@ export async function getMarketData(
   };
   const interval = intervalMap[timeframe] || '1h';
   
-  const commonParams = { symbol: currencyPair, interval };
+  const commonParams = { symbol: currencyPair, interval, dp: '5', timezone: 'UTC' };
   
   try {
     const [
-      seriesData,
+      priceData,
+      ema20Data,
+      ema50Data,
       rsiData,
       atrData,
       macdData,
       bbandsData
     ] = await Promise.all([
-      fetchTwelveData('time_series', { ...commonParams, outputsize: String(SERIES_OUTPUT_SIZE), order: 'ASC', dp: '5', timezone: 'UTC' }),
+      fetchTwelveData('time_series', { ...commonParams, outputsize: String(SERIES_OUTPUT_SIZE) }),
+      fetchTwelveData('ema', { ...commonParams, time_period: '20', outputsize: String(SERIES_OUTPUT_SIZE) }),
+      fetchTwelveData('ema', { ...commonParams, time_period: '50', outputsize: String(SERIES_OUTPUT_SIZE) }),
       fetchTwelveData('rsi', { ...commonParams, outputsize: '1', time_period: '14' }),
       fetchTwelveData('atr', { ...commonParams, outputsize: '1', time_period: '14' }),
       fetchTwelveData('macd', { ...commonParams, outputsize: '1', fast_period: '12', slow_period: '26', signal_period: '9' }),
       fetchTwelveData('bbands', { ...commonParams, outputsize: '1', time_period: '20', sd: '2' }),
     ]);
 
-    if (!seriesData.values || seriesData.values.length === 0) {
+    if (!priceData.values || priceData.values.length === 0) {
         throw new Error('Time series data is empty.');
     }
-
-    const latestDataPoint = seriesData.values[seriesData.values.length - 1];
     
     const latest: LatestIndicators = {
-        currentPrice: parseFloat(latestDataPoint.close),
-        ema20: parseFloat(latestDataPoint.ema_20),
-        ema50: parseFloat(latestDataPoint.ema_50),
+        currentPrice: parseFloat(priceData.values[0].close),
+        ema20: getMostRecentValue(ema20Data, 'ema'),
+        ema50: getMostRecentValue(ema50Data, 'ema'),
         rsi: getMostRecentValue(rsiData, 'rsi'),
         atr: getMostRecentValue(atrData, 'atr'),
         macdHistogram: getMostRecentValue(macdData, 'macd_hist'),
         bollingerUpper: getMostRecentValue(bbandsData, 'upper_band'),
         bollingerLower: getMostRecentValue(bbandsData, 'lower_band'),
     };
+    
+    // Create a map for quick lookups
+    const ema20Map = new Map(ema20Data.values.map((v: any) => [v.datetime, parseFloat(v.ema)]));
+    const ema50Map = new Map(ema50Data.values.map((v: any) => [v.datetime, parseFloat(v.ema)]));
 
-    const series: MarketDataSeries = seriesData.values.map((v: any) => ({
+    // Combine data, reversing price data to be chronological
+    const series: MarketDataSeries = priceData.values.reverse().map((v: any) => ({
         time: v.datetime,
         price: parseFloat(v.close),
-        ema20: v.ema_20 ? parseFloat(v.ema_20) : undefined,
-        ema50: v.ema_50 ? parseFloat(v.ema_50) : undefined,
+        ema20: ema20Map.get(v.datetime),
+        ema50: ema50Map.get(v.datetime),
     }));
 
     return { latest, series, source: 'live' };

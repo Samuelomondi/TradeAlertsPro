@@ -42,7 +42,7 @@ export async function generateTradeSignal(input: TradeSignalInput): Promise<Trad
 
 const prompt = ai.definePrompt({
   name: 'tradeSignalPrompt',
-  input: {schema: z.intersection(TradeSignalInputSchema.omit({marketData: true}), LatestIndicatorsSchema)},
+  input: {schema: TradeSignalInputSchema},
   output: {schema: TradeSignalOutputSchema.omit({ macdConfirmation: true, bollingerConfirmation: true })},
   prompt: `You are an expert trading signal generator.
 Analyze the provided technical indicator values for the given currency pair and timeframe to create a trade signal.
@@ -53,14 +53,14 @@ Account Balance: {{{accountBalance}}}
 Risk Percentage: {{{riskPercentage}}}
 
 Technical Indicators:
-- Current Price: {{{currentPrice}}}
-- EMA (20): {{{ema20}}}
-- EMA (50): {{{ema50}}}
-- RSI (14): {{{rsi}}}
-- ATR (14): {{{atr}}}
-- MACD Histogram: {{{macdHistogram}}}
-- Bollinger Upper Band: {{{bollingerUpper}}}
-- Bollinger Lower Band: {{{bollingerLower}}}
+- Current Price: {{{marketData.currentPrice}}}
+- EMA (20): {{{marketData.ema20}}}
+- EMA (50): {{{marketData.ema50}}}
+- RSI (14): {{{marketData.rsi}}}
+- ATR (14): {{{marketData.atr}}}
+- MACD Histogram: {{{marketData.macdHistogram}}}
+- Bollinger Upper Band: {{{marketData.bollingerUpper}}}
+- Bollinger Lower Band: {{{marketData.bollingerLower}}}
 
 Your analysis should consider the following:
 - Trend: Determine the trend based on EMA crossovers (20 above 50 is bullish, 20 below 50 is bearish).
@@ -86,13 +86,8 @@ const generateTradeSignalFlow = ai.defineFlow(
     outputSchema: TradeSignalOutputSchema,
   },
   async input => {
-    const combinedInput = {
-      ...input,
-      ...input.marketData,
-    };
-
     // Generate the core trade signal first
-    const {output: coreSignal} = await prompt(combinedInput);
+    const {output: coreSignal} = await prompt(input);
     if (!coreSignal) {
         throw new Error("Failed to generate core trade signal.");
     }

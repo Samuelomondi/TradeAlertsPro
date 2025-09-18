@@ -24,32 +24,35 @@ type MarketChartProps = {
 
 export default function MarketChart({ data }: MarketChartProps) {
   const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme === 'dark'
   
-  const chartConfig = React.useMemo(() => ({
-    price: {
-      label: "Price",
-      color: isDark ? "hsl(var(--chart-1))" : "hsl(var(--primary))",
-    },
-    ema20: {
-      label: "EMA 20",
-      color: isDark ? "hsl(var(--chart-2))" : "hsl(var(--chart-4))",
-    },
-    ema50: {
-      label: "EMA 50",
-      color: isDark ? "hsl(var(--chart-5))" : "hsl(var(--chart-2))",
-    },
-  }), [isDark]);
+  const chartConfig = React.useMemo(() => {
+    const isDark = resolvedTheme === 'dark'
+    return ({
+        price: {
+          label: "Price",
+          color: isDark ? "hsl(var(--chart-1))" : "hsl(var(--primary))",
+        },
+        ema20: {
+          label: "EMA 20",
+          color: isDark ? "hsl(var(--chart-2))" : "hsl(var(--chart-4))",
+        },
+        ema50: {
+          label: "EMA 50",
+          color: isDark ? "hsl(var(--chart-5))" : "hsl(var(--chart-2))",
+        },
+    })
+  }, [resolvedTheme]);
 
   const formattedData = data.map(d => ({
     ...d,
     time: new Date(d.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }))
 
-  const domain = [
-    Math.min(...data.map(d => d.price)) * 0.995,
-    Math.max(...data.map(d => d.price)) * 1.005,
-  ]
+  const allValues = data.flatMap(d => [d.price, d.ema20, d.ema50]).filter(v => v !== undefined) as number[];
+  const domain: [number, number] = allValues.length > 0 
+    ? [Math.min(...allValues) * 0.998, Math.max(...allValues) * 1.002] 
+    : [0, 0];
+
 
   return (
     <ChartContainer config={chartConfig} className="w-full h-full">
@@ -104,6 +107,7 @@ export default function MarketChart({ data }: MarketChartProps) {
           fillOpacity={0}
           stroke={chartConfig.ema20.color}
           strokeWidth={2}
+          connectNulls
         />
          <Area
           dataKey="ema50"
@@ -111,6 +115,7 @@ export default function MarketChart({ data }: MarketChartProps) {
           fillOpacity={0}
           stroke={chartConfig.ema50.color}
           strokeWidth={2}
+          connectNulls
         />
       </AreaChart>
     </ChartContainer>
