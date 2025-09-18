@@ -10,6 +10,8 @@ import {
   YAxis,
   Tooltip,
   Legend,
+  LineChart,
+  Line,
 } from "recharts"
 
 import {
@@ -36,11 +38,11 @@ export default function MarketChart({ data }: MarketChartProps) {
         },
         ema20: {
           label: "EMA 20",
-          color: isDark ? "hsl(var(--chart-2))" : "hsl(var(--chart-4))",
+          color: isDark ? "hsl(var(--chart-4))" : "hsl(var(--chart-4))",
         },
         ema50: {
           label: "EMA 50",
-          color: isDark ? "hsl(var(--chart-5))" : "hsl(var(--chart-2))",
+          color: isDark ? "hsl(var(--chart-2))" : "hsl(var(--chart-2))",
         },
     })
   }, [resolvedTheme]);
@@ -52,7 +54,7 @@ export default function MarketChart({ data }: MarketChartProps) {
 
   return (
     <ChartContainer config={chartConfig} className="w-full h-64">
-      <AreaChart
+      <LineChart
         accessibilityLayer
         data={formattedData}
         margin={{
@@ -85,39 +87,33 @@ export default function MarketChart({ data }: MarketChartProps) {
           content={<ChartTooltipContent indicator="line" />}
         />
          <Legend content={<ChartLegendContent />} />
-        <defs>
-            <linearGradient id="fillPrice" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={chartConfig.price.color} stopOpacity={0.8} />
-                <stop offset="95%" stopColor={chartConfig.price.color} stopOpacity={0.1} />
-            </linearGradient>
-        </defs>
-        <Area
+        <Line
           dataKey="price"
           type="natural"
-          fill="url(#fillPrice)"
           stroke={chartConfig.price.color}
-          stackId="a"
+          strokeWidth={2}
+          dot={false}
           name="Price"
         />
-        <Area
+        <Line
           dataKey="ema20"
           type="natural"
-          fillOpacity={0}
           stroke={chartConfig.ema20.color}
           strokeWidth={2}
           connectNulls
+          dot={false}
           name="EMA 20"
         />
-         <Area
+         <Line
           dataKey="ema50"
           type="natural"
-          fillOpacity={0}
           stroke={chartConfig.ema50.color}
           strokeWidth={2}
           connectNulls
+          dot={false}
           name="EMA 50"
         />
-      </AreaChart>
+      </LineChart>
     </ChartContainer>
   )
 }
