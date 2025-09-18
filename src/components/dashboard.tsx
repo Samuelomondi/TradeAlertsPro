@@ -80,6 +80,10 @@ export default function Dashboard({ botInfo }: DashboardProps) {
     setHistory(prev => prev.map(trade => trade.id === id ? { ...trade, status } : trade));
   };
   
+  const clearHistory = () => {
+    setHistory([]);
+  };
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
@@ -93,7 +97,7 @@ export default function Dashboard({ botInfo }: DashboardProps) {
                 <SidebarTrigger />
             </header>
             {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} />}
-            {activeView === 'history' && <TradeHistory history={history} updateTradeStatus={updateTradeStatus} />}
+            {activeView === 'history' && <TradeHistory history={history} updateTradeStatus={updateTradeStatus} clearHistory={clearHistory} />}
             {activeView === 'risk' && <RiskCalculator accountBalance={accountBalance} riskPercentage={riskPercentage} setAccountBalance={setAccountBalance} setRiskPercentage={setRiskPercentage} />}
             {activeView === 'info' && botInfo}
             {activeView === 'market' && <MarketHours />}

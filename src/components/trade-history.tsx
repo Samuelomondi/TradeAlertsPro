@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -11,13 +12,26 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ArrowDown, Check, X, RotateCcw, CheckCircle, XCircle } from "lucide-react";
+import { ArrowUp, ArrowDown, Check, X, RotateCcw, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 type TradeHistoryProps = {
   history: TradeHistoryEntry[];
   updateTradeStatus: (id: string, status: TradeStatus) => void;
+  clearHistory: () => void;
 };
 
 const statusConfig = {
@@ -27,12 +41,34 @@ const statusConfig = {
 };
 
 
-export default function TradeHistory({ history, updateTradeStatus }: TradeHistoryProps) {
+export default function TradeHistory({ history, updateTradeStatus, clearHistory }: TradeHistoryProps) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Trade History</CardTitle>
-        <CardDescription>A log of all generated trade signals. Mark trades as won or lost to track performance.</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+            <CardTitle>Trade History</CardTitle>
+            <CardDescription>A log of all generated trade signals. Mark trades as won or lost to track performance.</CardDescription>
+        </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" size="sm" disabled={history.length === 0}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear History
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete all of your trade history from your browser's local storage.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={clearHistory}>Continue</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardHeader>
       <CardContent>
         <Table>
