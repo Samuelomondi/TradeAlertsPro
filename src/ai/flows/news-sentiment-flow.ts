@@ -49,7 +49,7 @@ const getNewsSentimentPrompt = ai.definePrompt({
   name: 'getNewsSentimentPrompt',
   input: {schema: NewsSentimentInputSchema.omit({geminiApiKey: true})},
   output: {schema: NewsSentimentOutputSchema},
-  model: googleAI.model('gemini-1.5-flash'),
+  model: googleAI.model('gemini-2.5-flash'),
   prompt: `You are a financial analyst specializing in forex markets. Your task is to analyze the most recent news and events related to the currency pair: {{{currencyPair}}}.
 
   Based on your analysis of very recent news headlines, economic data releases, and central bank statements, determine the overall market sentiment for this pair.
