@@ -438,7 +438,7 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestam
 };
 
 const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistoryEntry[], updateTradeStatus: (id: string, status: TradeStatus) => void; }) => {
-    const recentTrades = history.slice(1, 5);
+    const recentTrades = history.slice(1, 4);
     
     const handleStatusClick = (trade: TradeHistoryEntry) => {
         const currentIndex = statusCycle.indexOf(trade.status);
@@ -461,7 +461,7 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
                     <History className="w-5 h-5" />
                     <span>Recent Trades</span>
                 </CardTitle>
-                <CardDescription>A quick look at your last four signals.</CardDescription>
+                <CardDescription>A quick look at your last three signals.</CardDescription>
             </CardHeader>
             <CardContent>
                 <TooltipProvider>
@@ -510,21 +510,6 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
                     </div>
                 )}
                 </TooltipProvider>
-                {history.length > 1 && (
-                    <>
-                        <Separator className="my-4" />
-                        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-                            <span className="font-semibold">Legend:</span>
-                            <div className="flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5"/> Trend</div>
-                             <div className="flex items-center gap-1"><ArrowRightLeft className="w-3.5 h-3.5"/> Reversion</div>
-                             <div className="flex items-center gap-1"><Maximize className="w-3.5 h-3.5"/> Breakout</div>
-                            <div className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Confirmed</div>
-                            <div className="flex items-center gap-1"><XCircle className="w-3.5 h-3.5 text-red-500" /> Not Confirmed</div>
-                            <div className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-blue-500" /> Live Data</div>
-                            <div className="flex items-center gap-1"><TriangleAlert className="w-3.5 h-3.5 text-yellow-500" /> Mock Data</div>
-                        </div>
-                    </>
-                )}
             </CardContent>
         </Card>
     )
@@ -567,5 +552,3 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
         </Tooltip>
     );
 };
-
-    
