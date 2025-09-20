@@ -264,7 +264,7 @@ const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogT
                     />
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button type="button">Done</Button>
+                            <Button type="button" variant="outline">Close</Button>
                         </DialogClose>
                     </DialogFooter>
                 </DialogContent>
@@ -272,3 +272,5 @@ const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogT
         </div>
     )
 }
+
+    
