@@ -14,33 +14,45 @@
  * @returns A list of key economic events.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, configureGenkit} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
-import { configureGenkit } from '@/ai/genkit';
 
 const ApiKeySchema = z.object({
-  geminiApiKey: z.string().min(1, "A Gemini API Key is required"),
+  geminiApiKey: z.string().min(1, 'A Gemini API Key is required'),
 });
 
 const EconomicEventSchema = z.object({
-  name: z.string().describe('The name of the economic event (e.g., US Non-Farm Payroll).'),
-  time: z.string().describe('The scheduled time of the event in UTC as an ISO 8601 string (e.g., 2024-07-26T12:30:00Z).'),
+  name: z
+    .string()
+    .describe(
+      'The name of the economic event (e.g., US Non-Farm Payroll).'
+    ),
+  time: z
+    .string()
+    .describe(
+      'The scheduled time of the event in UTC as an ISO 8601 string (e.g., 2024-07-26T12:30:00Z).'
+    ),
 });
 export type EconomicEvent = z.infer<typeof EconomicEventSchema>;
 
-
 const EconomicNewsOutputSchema = z.object({
-  events: z.array(EconomicEventSchema).describe('A list of 3-5 key upcoming economic events.'),
+  events: z
+    .array(EconomicEventSchema)
+    .describe('A list of 3-5 key upcoming economic events.'),
 });
 export type EconomicNewsOutput = z.infer<typeof EconomicNewsOutputSchema>;
 
-export async function getEconomicNews(input: z.infer<typeof ApiKeySchema>): Promise<EconomicNewsOutput> {
+export async function getEconomicNews(
+  input: z.infer<typeof ApiKeySchema>
+): Promise<EconomicNewsOutput> {
   return getEconomicNewsFlow(input);
 }
 
 const getEconomicNewsPrompt = ai.definePrompt({
   name: 'getEconomicNewsPrompt',
   output: {schema: EconomicNewsOutputSchema},
+  model: googleAI.model('gemini-1.5-flash-latest'),
   prompt: `You are a financial market analyst. Your task is to provide a list of 3 to 5 major, high-impact economic news events that are scheduled for the upcoming week.
 
   Focus on events that are known to cause significant volatility in the forex markets, such as interest rate decisions from major central banks (FOMC, ECB, BoJ), inflation reports (CPI), and employment data (NFP).
@@ -55,10 +67,9 @@ const getEconomicNewsFlow = ai.defineFlow(
     inputSchema: ApiKeySchema,
     outputSchema: EconomicNewsOutputSchema,
   },
-  async (input) => {
+  async input => {
     const ai = configureGenkit(input.geminiApiKey);
     const {output} = await getEconomicNewsPrompt();
     return output!;
   }
 );
-
