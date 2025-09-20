@@ -19,6 +19,7 @@ TradeAlert is a web application designed to assist forex traders by generating t
     - An AI-generated list of upcoming high-impact economic events.
     - An AI-powered sentiment analysis tool that scrapes recent news for a currency pair to determine if the market mood is Positive, Negative, or Neutral.
     - An overview of key market sentiment indicators.
+- **Theme Toggle**: Switch between light, dark, and system themes with the click of a button.
 - **Built-in Help & FAQ**: An accordion-style FAQ section to answer common questions about how the application works.
 
 ## Tech Stack
@@ -67,7 +68,13 @@ TradeAlert is a web application designed to assist forex traders by generating t
     npm run dev
     ```
 
-The application will be available at [http://localhost:9002](http://localhost:9002). When you first open the app, you will be prompted to enter your API keys.
+The application will be available at [http://localhost:9002](http://localhost:9002). Once the app is running, navigate to the **App Settings** page from the main menu to enter your API keys.
+
+### Setting up Telegram Notifications
+
+1.  Start a chat with the **TradeAlert** bot on Telegram: [@vibecodefxbot](https://t.me/vibecodefxbot).
+2.  Use another bot like `@userinfobot` to find your personal Telegram User ID.
+3.  Copy this ID and paste it into the **Telegram Chat ID** field in the app's settings.
 
 ## How It Works
 
