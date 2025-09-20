@@ -29,11 +29,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, CheckCircle, XCircle, ArrowUp, ArrowDown, TriangleAlert, History, Minus, Pause, TrendingUp, ArrowRightLeft, Maximize } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, ArrowUp, ArrowDown, TriangleAlert, History, Minus, Pause, TrendingUp, ArrowRightLeft, Maximize, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CURRENCY_PAIRS, TIMEFRAMES, STRATEGIES, StrategyId } from "@/lib/constants";
 import type { TradeSignal, TradeHistoryEntry, TradeStatus } from "@/lib/types";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, isMarketOpen } from "@/lib/utils";
 import type { MarketDataSource, MarketDataSeries } from "@/services/market-data";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Badge } from "./ui/badge";
@@ -80,6 +80,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   const [lastInputs, setLastInputs] = useState<FormValues | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [generationTimestamp, setGenerationTimestamp] = useState<string | null>(null);
+  const [marketIsOpen, setMarketIsOpen] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -96,6 +97,11 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     } catch (error) {
       console.error("Failed to parse last signal from localStorage", error);
     }
+
+    const checkMarket = () => setMarketIsOpen(isMarketOpen());
+    checkMarket();
+    const interval = setInterval(checkMarket, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const form = useForm<FormValues>({
@@ -188,10 +194,19 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         <div className="space-y-8">
             <Card>
                 <CardHeader>
-                <CardTitle>Generate Trade Signal</CardTitle>
-                <CardDescription>
-                    Select a pair and timeframe to generate a signal with live market data.
-                </CardDescription>
+                    <CardTitle>Generate Trade Signal</CardTitle>
+                    <CardDescription>
+                        Select a pair and timeframe to generate a signal with live market data.
+                    </CardDescription>
+                    <Alert variant={marketIsOpen ? "default" : "destructive"} className="mt-4">
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>
+                            {marketIsOpen ? "Market is Open" : "Market is Closed"}
+                        </AlertTitle>
+                        <AlertDescription>
+                            {marketIsOpen ? "Live market data is being used." : "Signals are generated using mock data for practice."}
+                        </AlertDescription>
+                    </Alert>
                 </CardHeader>
                 <CardContent>
                 <Form {...form}>
