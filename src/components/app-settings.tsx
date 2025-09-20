@@ -129,6 +129,7 @@ export default function AppSettings({ accountBalance, riskPercentage, setAccount
                   toggleVisibility={() => setShowGeminiKey(!showGeminiKey)}
                   showVisibilityToggle={true}
                   isVisible={showGeminiKey}
+                  iconInside={true}
                 />
                  <StatusItem
                   label="Twelve Data API"
@@ -143,6 +144,7 @@ export default function AppSettings({ accountBalance, riskPercentage, setAccount
                   toggleVisibility={() => setShowTwelveDataKey(!showTwelveDataKey)}
                   showVisibilityToggle={true}
                   isVisible={showTwelveDataKey}
+                  iconInside={true}
                 />
                 <StatusItem
                   label="Telegram Notifications"
@@ -153,6 +155,7 @@ export default function AppSettings({ accountBalance, riskPercentage, setAccount
                   dialogTitle="Edit Telegram Chat ID"
                   dialogDescription="Enter your personal Telegram Chat ID to receive notifications."
                   inputIcon={<Send />}
+                  iconInside={true}
                 />
               </div>
             </div>
@@ -200,7 +203,7 @@ export default function AppSettings({ accountBalance, riskPercentage, setAccount
   );
 }
 
-const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogTitle, dialogDescription, inputType = 'text', inputIcon, toggleVisibility, showVisibilityToggle, isVisible, inputProps }: any) => {
+const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogTitle, dialogDescription, inputType = 'text', inputIcon, toggleVisibility, showVisibilityToggle, isVisible, inputProps, iconInside = false }: any) => {
     return (
         <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
             <div className="flex items-center gap-3">
@@ -229,14 +232,18 @@ const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogT
                         render={({ field }) => (
                             <FormItem>
                             <FormControl>
-                                <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">
-                                        {inputIcon}
-                                    </div>
+                                <div className={cn("relative", !iconInside && "flex items-center gap-2")}>
+                                    {iconInside ? (
+                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">
+                                            {inputIcon}
+                                        </div>
+                                    ) : (
+                                        <div className="h-4 w-4 text-muted-foreground">{inputIcon}</div>
+                                    )}
                                     <Input
                                         type={inputType}
                                         placeholder={`Enter ${label}`}
-                                        className="pl-8 pr-10"
+                                        className={cn(iconInside && "pl-8 pr-10", !iconInside && "w-full")}
                                         {...field}
                                         {...inputProps}
                                     />
@@ -267,3 +274,5 @@ const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogT
         </div>
     )
 }
+
+    
