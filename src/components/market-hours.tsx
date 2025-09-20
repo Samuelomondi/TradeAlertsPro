@@ -17,6 +17,9 @@ const markets: Market[] = [
   { name: 'Tokyo', openUtc: 0, closeUtc: 8 },
 ];
 
+// Sort markets by their opening time
+const sortedMarkets = [...markets].sort((a, b) => a.openUtc - b.openUtc);
+
 function getMarketStatus(market: Market, currentHour: number) {
   if (market.openUtc < market.closeUtc) {
     return currentHour >= market.openUtc && currentHour < market.closeUtc;
@@ -52,11 +55,11 @@ export default function MarketHours() {
       <CardHeader>
         <CardTitle>Market Hours</CardTitle>
         <CardDescription>
-          Live status of major foreign exchange markets. Current local time: {localTime}
+          Live status of major foreign exchange markets, sorted by opening time. Current local time: {localTime}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {markets.map((market) => {
+        {sortedMarkets.map((market) => {
           const isOpen = getMarketStatus(market, currentUtcHour);
           return (
             <Card key={market.name} className={`flex flex-col items-center p-6 ${isOpen ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'}`}>
