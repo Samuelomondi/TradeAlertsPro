@@ -278,7 +278,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                 </Form>
                 </CardContent>
             </Card>
-            <RecentTradesCard history={history} updateTradeStatus={updateTradeStatus} />
+            <RecentTradesCard history={history} />
         </div>
         <div className="h-full">
             {isLoading && (
@@ -309,7 +309,6 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                         chartSeries={chartSeries || []}
                         timestamp={generationTimestamp}
                         history={history}
-                        updateTradeStatus={updateTradeStatus}
                     />
                 </div>
             )}
@@ -342,27 +341,19 @@ const signalStyles = {
     }
 }
 
-const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestamp, history, updateTradeStatus }: { 
+const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestamp, history }: { 
     signal: TradeSignal, 
     inputs: FormValues, 
     dataSource: MarketDataSource | null, 
     chartSeries: MarketDataSeries[],
     timestamp: string,
-    history: TradeHistoryEntry[],
-    updateTradeStatus: (id: string, status: TradeStatus) => void;
+    history: TradeHistoryEntry[]
 }) => {
     const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
     
     const currentTrade = history.find(trade => trade.id === timestamp);
     const currentStatus = currentTrade?.status || 'open';
     const config = statusConfig[currentStatus];
-
-    const handleStatusClick = () => {
-        const currentIndex = statusCycle.indexOf(currentStatus);
-        const nextIndex = (currentIndex + 1) % statusCycle.length;
-        const nextStatus = statusCycle[nextIndex];
-        updateTradeStatus(timestamp, nextStatus);
-    };
 
     const styles = signalStyles[signal.signal as keyof typeof signalStyles] || signalStyles.Hold;
     const Icon = styles.icon;
@@ -398,9 +389,7 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestam
                         )}
                          <Badge 
                             variant={config.variant} 
-                            className={cn(config.className, "cursor-pointer")}
-                            onClick={handleStatusClick}
-                            title={`Click to change status (currently ${currentStatus})`}
+                            className={cn(config.className)}
                         >
                             {config.label}
                         </Badge>
@@ -437,15 +426,8 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestam
     );
 };
 
-const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistoryEntry[], updateTradeStatus: (id: string, status: TradeStatus) => void; }) => {
+const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
     const recentTrades = history.slice(1, 4);
-    
-    const handleStatusClick = (trade: TradeHistoryEntry) => {
-        const currentIndex = statusCycle.indexOf(trade.status);
-        const nextIndex = (currentIndex + 1) % statusCycle.length;
-        const nextStatus = statusCycle[nextIndex];
-        updateTradeStatus(trade.id, nextStatus);
-    };
 
     const signalIcon = (signal: string) => {
         if (signal === 'Buy') return <ArrowUp className="w-5 h-5 text-green-500" />;
@@ -492,9 +474,7 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
                                         </div>
                                         <Badge 
                                             variant={config.variant} 
-                                            className={cn(config.className, "cursor-pointer")}
-                                            onClick={() => handleStatusClick(trade)}
-                                            title={`Click to change status (currently ${trade.status})`}
+                                            className={cn(config.className)}
                                         >
                                             {config.label}
                                         </Badge>
