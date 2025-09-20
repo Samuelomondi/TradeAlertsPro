@@ -27,13 +27,24 @@ const sortedMarkets = [...markets].sort((a, b) => {
 });
 
 
-function getMarketStatus(market: Market, currentHour: number) {
-  if (market.openUtc < market.closeUtc) {
-    return currentHour >= market.openUtc && currentHour < market.closeUtc;
-  } else { // Handles overnight markets like Sydney & Tokyo
-    return currentHour >= market.openUtc || currentHour < market.closeUtc;
-  }
+function getMarketStatus(market: Market, now: Date) {
+    const currentUtcDay = now.getUTCDay(); // Sunday = 0, Saturday = 6
+    const currentUtcHour = now.getUTCHours();
+    
+    // Forex market is closed on Saturday and most of Sunday.
+    // It opens Sunday ~21:00 UTC (Sydney open) and closes Friday ~21:00 UTC (New York close).
+    if (currentUtcDay === 6) return false; // All markets closed on Saturday.
+    if (currentUtcDay === 5 && currentUtcHour >= 21) return false; // Market closes Friday 21:00 UTC.
+    if (currentUtcDay === 0 && currentUtcHour < 21) return false; // Market opens Sunday 21:00 UTC.
+
+    // Check if the current time is within the market's hours.
+    if (market.openUtc < market.closeUtc) { // Normal day session (e.g., London 8-16)
+        return currentUtcHour >= market.openUtc && currentUtcHour < market.closeUtc;
+    } else { // Overnight session (e.g., Sydney 22-6)
+        return currentUtcHour >= market.openUtc || currentUtcHour < market.closeUtc;
+    }
 }
+
 
 function formatUtcHourToLocal(utcHour: number, baseDate: Date) {
     const date = new Date(baseDate);
@@ -48,8 +59,6 @@ export default function MarketHours() {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000 * 60); // Update every minute
     return () => clearInterval(timer);
   }, []);
-
-  const currentUtcHour = currentTime.getUTCHours();
   
   const localTime = currentTime.toLocaleTimeString(undefined, {
       hour: '2-digit',
@@ -67,7 +76,7 @@ export default function MarketHours() {
       </CardHeader>
       <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {sortedMarkets.map((market) => {
-          const isOpen = getMarketStatus(market, currentUtcHour);
+          const isOpen = getMarketStatus(market, currentTime);
           return (
             <Card key={market.name} className={`flex flex-col items-center p-6 ${isOpen ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'}`}>
               <Globe className={`w-10 h-10 mb-2 ${isOpen ? 'text-green-600' : 'text-red-600'}`} />
@@ -85,3 +94,4 @@ export default function MarketHours() {
     </Card>
   );
 }
+
