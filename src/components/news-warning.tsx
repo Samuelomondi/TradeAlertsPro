@@ -44,17 +44,29 @@ export default function NewsWarning() {
   const { settings } = useSettings();
   const [events, setEvents] = useState<EconomicEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
   
   const [sentiment, setSentiment] = useState<NewsSentimentOutput | null>(null);
   const [isLoadingSentiment, setIsLoadingSentiment] = useState(false);
+  const [sentimentError, setSentimentError] = useState<string | null>(null);
   const [selectedPair, setSelectedPair] = useState(CURRENCY_PAIRS[0]);
 
   useEffect(() => {
     async function fetchNews() {
       setIsLoadingEvents(true);
-      const newsEvents = await getNewsEventsAction({ geminiApiKey: settings.geminiApiKey });
-      setEvents(newsEvents);
-      setIsLoadingEvents(false);
+      setEventsError(null);
+      try {
+        const newsEvents = await getNewsEventsAction({ geminiApiKey: settings.geminiApiKey });
+        setEvents(newsEvents);
+      } catch (error) {
+          if (error instanceof Error) {
+            setEventsError(error.message);
+          } else {
+            setEventsError("An unknown error occurred.");
+          }
+      } finally {
+        setIsLoadingEvents(false);
+      }
     }
     fetchNews();
   }, [settings.geminiApiKey]);
@@ -62,12 +74,22 @@ export default function NewsWarning() {
   const handleFetchSentiment = async () => {
     setIsLoadingSentiment(true);
     setSentiment(null);
-    const sentimentData = await getNewsSentimentAction({
-        currencyPair: selectedPair,
-        geminiApiKey: settings.geminiApiKey,
-    });
-    setSentiment(sentimentData);
-    setIsLoadingSentiment(false);
+    setSentimentError(null);
+    try {
+        const sentimentData = await getNewsSentimentAction({
+            currencyPair: selectedPair,
+            geminiApiKey: settings.geminiApiKey,
+        });
+        setSentiment(sentimentData);
+    } catch (error) {
+        if (error instanceof Error) {
+            setSentimentError(error.message);
+        } else {
+            setSentimentError("An unknown error occurred.");
+        }
+    } finally {
+        setIsLoadingSentiment(false);
+    }
   }
 
   return (
@@ -97,6 +119,12 @@ export default function NewsWarning() {
                       <Skeleton className="h-5 w-full" />
                       <Skeleton className="h-5 w-2/3" />
                   </div>
+              ) : eventsError ? (
+                 <Alert variant="destructive">
+                    <TriangleAlert className="h-4 w-4" />
+                    <AlertTitle>Error Fetching Events</AlertTitle>
+                    <AlertDescription>{eventsError}</AlertDescription>
+                </Alert>
               ) : (
                   <ul className="list-disc list-inside space-y-2 text-sm">
                       {events.length > 0 ? events.map((event, index) => (
@@ -141,6 +169,14 @@ export default function NewsWarning() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="ml-4 text-lg">Analyzing news sentiment...</p>
             </div>
+          )}
+
+          {sentimentError && !isLoadingSentiment && (
+            <Alert variant="destructive">
+                <TriangleAlert className="h-4 w-4" />
+                <AlertTitle>Error Fetching Sentiment</AlertTitle>
+                <AlertDescription>{sentimentError}</AlertDescription>
+            </Alert>
           )}
 
           {sentiment && !isLoadingSentiment && (

@@ -91,14 +91,19 @@ const ApiKeySchema = z.object({
 
 export async function getNewsEventsAction(data: { geminiApiKey?: string }): Promise<EconomicEvent[]> {
     const validated = ApiKeySchema.safeParse(data);
-    if (!validated.success) return [];
+    if (!validated.success) {
+        throw new Error("API Key is missing or invalid.");
+    }
     
     try {
         const news = await getEconomicNews({ geminiApiKey: validated.data.geminiApiKey });
         return news.events;
     } catch (error) {
         console.error("Error fetching news events:", error);
-        return [];
+        if (error instanceof Error) {
+            throw new Error(`Failed to fetch news events: ${error.message}`);
+        }
+        throw new Error("An unknown error occurred while fetching news events.");
     }
 }
 
@@ -107,15 +112,20 @@ const NewsSentimentActionSchema = z.object({
     geminiApiKey: z.string().min(1, "Gemini API Key is required."),
 });
 
-export async function getNewsSentimentAction(data: { currencyPair: string, geminiApiKey?: string }): Promise<NewsSentimentOutput | null> {
+export async function getNewsSentimentAction(data: { currencyPair: string, geminiApiKey?: string }): Promise<NewsSentimentOutput> {
     const validated = NewsSentimentActionSchema.safeParse(data);
-    if (!validated.success) return null;
+     if (!validated.success) {
+        throw new Error("Currency pair or API key is missing or invalid.");
+    }
     
     try {
         const sentiment = await getNewsSentiment(validated.data);
         return sentiment;
     } catch (error) {
         console.error(`Error fetching news sentiment for ${validated.data.currencyPair}:`, error);
-        return null;
+        if (error instanceof Error) {
+            throw new Error(`Failed to fetch sentiment: ${error.message}`);
+        }
+        throw new Error("An unknown error occurred while fetching news sentiment.");
     }
 }
