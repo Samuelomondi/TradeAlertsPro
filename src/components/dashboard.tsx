@@ -151,7 +151,7 @@ function AppSidebar({ activeView, setActiveView }: { activeView: View; setActive
             className={cn("hidden md:flex items-center gap-2 w-full text-left transition-opacity", state === 'collapsed' && 'justify-center')}
         >
             <CustomIcon className="w-8 h-8 text-primary shrink-0" />
-            <h1 className={cn("text-xl font-semibold text-primary transition-all", state === 'collapsed' && 'opacity-0 w-0')}>TradeAlert</h1>
+            <h1 className={cn("text-xl font-semibold text-primary transition-all", state === 'collapsed' && 'opacity-0 w-0 h-0')}>TradeAlert</h1>
         </button>
       </SidebarHeader>
       <SidebarContent>
