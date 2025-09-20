@@ -11,18 +11,12 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-  useSidebar,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarTrigger,
+} from "@/components/ui/menubar";
 import SignalGeneration from "./signal-generation";
 import TradeHistory from "./trade-history";
 import MarketHours from "./market-hours";
@@ -32,9 +26,8 @@ import AppSettings from "./app-settings";
 
 import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
 import TradePerformance from "./trade-performance";
-import { isMarketOpen } from "@/lib/utils";
 import { CURRENCY_PAIRS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
 
 type View = "signals" | "history" | "info" | "market" | "news" | "help";
 
@@ -63,7 +56,6 @@ export default function Dashboard() {
   const [accountBalance, setAccountBalance] = useState(1000);
   const [riskPercentage, setRiskPercentage] = useState(1);
   const [selectedPair, setSelectedPair] = useState(CURRENCY_PAIRS[0]);
-
 
   // Load history from localStorage on initial client-side render
   useEffect(() => {
@@ -101,38 +93,6 @@ export default function Dashboard() {
   const deleteTrade = (id: string) => {
     setHistory(prev => prev.filter(trade => trade.id !== id));
   };
-
-  return (
-    <SidebarProvider>
-      <div className="flex min-h-screen">
-        <AppSidebar activeView={activeView} setActiveView={setActiveView} />
-        <main className="flex-1 p-4 md:p-8 bg-background">
-            <header className="flex items-center justify-between md:hidden mb-4 border-b pb-4">
-                <div className="flex items-center gap-2">
-                    <CustomIcon className="w-8 h-8 text-primary" />
-                    <h1 className="text-xl font-semibold text-primary">TradeAlert</h1>
-                </div>
-                <SidebarTrigger />
-            </header>
-            {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} history={history} updateTradeStatus={updateTradeStatus} selectedPair={selectedPair} setSelectedPair={setSelectedPair} />}
-            {activeView === 'history' && (
-                <div className="space-y-8">
-                    <TradePerformance history={history} />
-                    <TradeHistory history={history} updateTradeStatus={updateTradeStatus} clearHistory={clearHistory} deleteTrade={deleteTrade} />
-                </div>
-            )}
-            {activeView === 'info' && <AppSettings accountBalance={accountBalance} riskPercentage={riskPercentage} setAccountBalance={setAccountBalance} setRiskPercentage={setRiskPercentage} />}
-            {activeView === 'market' && <MarketHours selectedPair={selectedPair} />}
-            {activeView === 'news' && <NewsWarning />}
-            {activeView === 'help' && <Help />}
-        </main>
-      </div>
-    </SidebarProvider>
-  );
-}
-
-function AppSidebar({ activeView, setActiveView }: { activeView: View; setActiveView: (view: View) => void; }) {
-  const { toggleSidebar, isMobile, state } = useSidebar();
   
   const menuItems: { id: View; label: string; icon: React.ElementType }[] = [
     { id: "signals", label: "Show Signals", icon: BarChart2 },
@@ -144,38 +104,39 @@ function AppSidebar({ activeView, setActiveView }: { activeView: View; setActive
   ];
 
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <button 
-            onClick={toggleSidebar}
-            className={cn("hidden md:flex items-center gap-2 w-full text-left transition-opacity", state === 'collapsed' && 'justify-center')}
-        >
-            <CustomIcon className="w-8 h-8 text-primary shrink-0" />
-            <h1 className={cn("text-xl font-semibold text-primary transition-all", state === 'collapsed' && 'opacity-0 w-0 h-0')}>TradeAlert</h1>
-        </button>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.id}>
-              <SidebarMenuButton
-                onClick={() => {
-                  setActiveView(item.id);
-                  if (isMobile) toggleSidebar();
-                }}
-                isActive={activeView === item.id}
-                tooltip={item.label}
-              >
-                <item.icon />
-                <span>{item.label}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter>
-         <Separator className="my-2"/>
-      </SidebarFooter>
-    </Sidebar>
+    <div className="flex flex-col min-h-screen">
+      <header className="flex items-center justify-between p-2 border-b">
+        <div className="flex items-center gap-2">
+            <CustomIcon className="w-8 h-8 text-primary" />
+            <h1 className="text-xl font-semibold text-primary">TradeAlert</h1>
+        </div>
+        <Menubar>
+            <MenubarMenu>
+                <MenubarTrigger>Menu</MenubarTrigger>
+                <MenubarContent>
+                    {menuItems.map((item) => (
+                        <MenubarItem key={item.id} onSelect={() => setActiveView(item.id)} className="gap-2">
+                             <item.icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                        </MenubarItem>
+                    ))}
+                </MenubarContent>
+            </MenubarMenu>
+        </Menubar>
+      </header>
+      <main className="flex-1 p-4 md:p-8 bg-background">
+          {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} history={history} updateTradeStatus={updateTradeStatus} selectedPair={selectedPair} setSelectedPair={setSelectedPair} />}
+          {activeView === 'history' && (
+              <div className="space-y-8">
+                  <TradePerformance history={history} />
+                  <TradeHistory history={history} updateTradeStatus={updateTradeStatus} clearHistory={clearHistory} deleteTrade={deleteTrade} />
+              </div>
+          )}
+          {activeView === 'info' && <AppSettings accountBalance={accountBalance} riskPercentage={riskPercentage} setAccountBalance={setAccountBalance} setRiskPercentage={setRiskPercentage} />}
+          {activeView === 'market' && <MarketHours selectedPair={selectedPair} />}
+          {activeView === 'news' && <NewsWarning />}
+          {activeView === 'help' && <Help />}
+      </main>
+    </div>
   );
 }
