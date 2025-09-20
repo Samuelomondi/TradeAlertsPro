@@ -5,12 +5,9 @@ import React, { useState, useEffect } from "react";
 import {
   BarChart2,
   Settings,
-  Calculator,
   Clock,
   HelpCircle,
   History,
-  PanelLeft,
-  Rss,
   TriangleAlert,
 } from "lucide-react";
 import {
@@ -25,25 +22,20 @@ import {
   useSidebar,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import SignalGeneration from "./signal-generation";
 import TradeHistory from "./trade-history";
-import RiskCalculator from "./risk-calculator";
 import MarketHours from "./market-hours";
 import NewsWarning from "./news-warning";
 import Help from "./help";
+import AppSettings from "./app-settings";
 
 import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
 import TradePerformance from "./trade-performance";
 
-type View = "signals" | "history" | "risk" | "info" | "market" | "news" | "help";
+type View = "signals" | "history" | "info" | "market" | "news" | "help";
 
 const TRADE_HISTORY_STORAGE_KEY = "tradeHistory";
-
-type DashboardProps = {
-  botInfo: React.ReactNode;
-};
 
 const CustomIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg 
@@ -62,7 +54,7 @@ const CustomIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-export default function Dashboard({ botInfo }: DashboardProps) {
+export default function Dashboard() {
   const [activeView, setActiveView] = useState<View>("signals");
   const [history, setHistory] = useState<TradeHistoryEntry[]>([]);
   const [accountBalance, setAccountBalance] = useState(1000);
@@ -124,8 +116,7 @@ export default function Dashboard({ botInfo }: DashboardProps) {
                     <TradeHistory history={history} updateTradeStatus={updateTradeStatus} clearHistory={clearHistory} deleteTrade={deleteTrade} />
                 </div>
             )}
-            {activeView === 'risk' && <RiskCalculator accountBalance={accountBalance} riskPercentage={riskPercentage} setAccountBalance={setAccountBalance} setRiskPercentage={setRiskPercentage} />}
-            {activeView === 'info' && botInfo}
+            {activeView === 'info' && <AppSettings accountBalance={accountBalance} riskPercentage={riskPercentage} setAccountBalance={setAccountBalance} setRiskPercentage={setRiskPercentage} />}
             {activeView === 'market' && <MarketHours />}
             {activeView === 'news' && <NewsWarning />}
             {activeView === 'help' && <Help />}
@@ -141,9 +132,8 @@ function AppSidebar({ activeView, setActiveView }: { activeView: View; setActive
   const menuItems: { id: View; label: string; icon: React.ElementType }[] = [
     { id: "signals", label: "Show Signals", icon: BarChart2 },
     { id: "history", label: "Trade History", icon: History },
-    { id: "risk", label: "Risk Settings", icon: Calculator },
     { id: "info", label: "App Settings", icon: Settings },
-    { id: "news", label: "News Warning", icon: TriangleAlert },
+    { id: "news", label: "News & Sentiment", icon: TriangleAlert },
     { id: "market", label: "Market Hours", icon: Clock },
     { id: "help", label: "Help", icon: HelpCircle },
   ];
@@ -178,8 +168,8 @@ function AppSidebar({ activeView, setActiveView }: { activeView: View; setActive
       <SidebarFooter>
          <Separator className="my-2"/>
          <div className="flex items-center justify-center p-2 text-xs text-muted-foreground">
-             <Rss className="w-4 h-4 mr-2" />
-             <span>Status: Connected</span>
+             <span className="text-green-500">●</span>
+             <span className="ml-2">Status: Connected</span>
          </div>
       </SidebarFooter>
     </Sidebar>

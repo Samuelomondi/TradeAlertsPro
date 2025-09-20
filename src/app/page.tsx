@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import Dashboard from "@/components/dashboard";
-import BotInfo from "@/components/bot-info";
 import { SettingsProvider, useSettings } from '@/components/settings-provider';
 import Setup from '@/components/setup';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -32,7 +31,7 @@ function App() {
 
   const isConfigured = settings.geminiApiKey && settings.twelveDataApiKey;
 
-  return isConfigured ? <Dashboard botInfo={<BotInfo />} /> : <Setup />;
+  return isConfigured ? <Dashboard /> : <Setup />;
 }
 
 export default function Home() {
