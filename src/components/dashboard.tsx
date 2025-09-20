@@ -34,6 +34,7 @@ import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
 import TradePerformance from "./trade-performance";
 import { isMarketOpen } from "@/lib/utils";
 import { CURRENCY_PAIRS } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 type View = "signals" | "history" | "info" | "market" | "news" | "help";
 
@@ -131,7 +132,7 @@ export default function Dashboard() {
 }
 
 function AppSidebar({ activeView, setActiveView }: { activeView: View; setActiveView: (view: View) => void; }) {
-  const { toggleSidebar, isMobile } = useSidebar();
+  const { toggleSidebar, isMobile, state } = useSidebar();
   
   const menuItems: { id: View; label: string; icon: React.ElementType }[] = [
     { id: "signals", label: "Show Signals", icon: BarChart2 },
@@ -145,10 +146,13 @@ function AppSidebar({ activeView, setActiveView }: { activeView: View; setActive
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="hidden md:flex items-center gap-2">
-            <CustomIcon className="w-8 h-8 text-primary" />
-            <h1 className="text-xl font-semibold text-primary">TradeAlert</h1>
-        </div>
+        <button 
+            onClick={toggleSidebar}
+            className={cn("hidden md:flex items-center gap-2 w-full text-left transition-opacity", state === 'collapsed' && 'justify-center')}
+        >
+            <CustomIcon className="w-8 h-8 text-primary shrink-0" />
+            <h1 className={cn("text-xl font-semibold text-primary transition-all", state === 'collapsed' && 'opacity-0 w-0')}>TradeAlert</h1>
+        </button>
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
