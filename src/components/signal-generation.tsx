@@ -195,147 +195,149 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   const showResults = generatedSignal && lastInputs && generationTimestamp;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        <div className="space-y-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Generate Trade Signal</CardTitle>
-                    <CardDescription>
-                        Select a pair and timeframe to generate a signal with live market data.
-                    </CardDescription>
-                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Alert variant={marketIsOpen ? "default" : "destructive"}>
-                            <Info className="h-4 w-4" />
-                            <AlertTitle>
-                                {marketIsOpen ? "Market is Open" : "Market is Closed"}
-                            </AlertTitle>
-                            <AlertDescription>
-                                {marketIsOpen ? "Live market data is being used." : "Using mock data for practice."}
-                            </AlertDescription>
-                        </Alert>
-                        <OptimalConditionsIndicator selectedPair={selectedPair} />
-                    </div>
-                </CardHeader>
-                <CardContent>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <FormField
-                        control={form.control}
-                        name="currencyPair"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Currency Pair</FormLabel>
-                            <Select onValueChange={(value) => { field.onChange(value); setSelectedPair(value); }} value={field.value}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a pair" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                {CURRENCY_PAIRS.map((pair) => (
-                                    <SelectItem key={pair} value={pair}>{pair}</SelectItem>
-                                ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name="timeframe"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Timeframe</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a timeframe" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                {TIMEFRAMES.map((tf) => (
-                                    <SelectItem key={tf} value={tf}>{tf}</SelectItem>
-                                ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                    </div>
-                     <FormField
-                        control={form.control}
-                        name="strategy"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Strategy</FormLabel>
-                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a strategy" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                {STRATEGIES.map((strategy) => (
-                                    <SelectItem key={strategy.id} value={strategy.id}>
-                                       <div className="flex items-center gap-2">
-                                            <strategy.icon className="w-4 h-4" />
-                                            <span>{strategy.name}</span>
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
+    <TooltipProvider>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <div className="space-y-8">
+              <Card>
+                  <CardHeader>
+                      <CardTitle>Generate Trade Signal</CardTitle>
+                      <CardDescription>
+                          Select a pair and timeframe to generate a signal with live market data.
+                      </CardDescription>
+                       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <Alert variant={marketIsOpen ? "default" : "destructive"}>
+                              <Info className="h-4 w-4" />
+                              <AlertTitle>
+                                  {marketIsOpen ? "Market is Open" : "Market is Closed"}
+                              </AlertTitle>
+                              <AlertDescription>
+                                  {marketIsOpen ? "Live market data is being used." : "Using mock data for practice."}
+                              </AlertDescription>
+                          </Alert>
+                          <OptimalConditionsIndicator selectedPair={selectedPair} />
+                      </div>
+                  </CardHeader>
+                  <CardContent>
+                  <Form {...form}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <FormField
+                          control={form.control}
+                          name="currencyPair"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>Currency Pair</FormLabel>
+                              <Select onValueChange={(value) => { field.onChange(value); setSelectedPair(value); }} value={field.value}>
+                                  <FormControl>
+                                  <SelectTrigger>
+                                      <SelectValue placeholder="Select a pair" />
+                                  </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                  {CURRENCY_PAIRS.map((pair) => (
+                                      <SelectItem key={pair} value={pair}>{pair}</SelectItem>
+                                  ))}
+                                  </SelectContent>
+                              </Select>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                          />
+                          <FormField
+                          control={form.control}
+                          name="timeframe"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>Timeframe</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                  <SelectTrigger>
+                                      <SelectValue placeholder="Select a timeframe" />
+                                  </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                  {TIMEFRAMES.map((tf) => (
+                                      <SelectItem key={tf} value={tf}>{tf}</SelectItem>
+                                  ))}
+                                  </SelectContent>
+                              </Select>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                          />
+                      </div>
+                       <FormField
+                          control={form.control}
+                          name="strategy"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>Strategy</FormLabel>
+                               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                  <SelectTrigger>
+                                      <SelectValue placeholder="Select a strategy" />
+                                  </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                  {STRATEGIES.map((strategy) => (
+                                      <SelectItem key={strategy.id} value={strategy.id}>
+                                         <div className="flex items-center gap-2">
+                                              <strategy.icon className="w-4 h-4" />
+                                              <span>{strategy.name}</span>
+                                          </div>
+                                      </SelectItem>
+                                  ))}
+                                  </SelectContent>
+                              </Select>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                          />
 
-                    <Button type="submit" disabled={isLoading} className="w-full">
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Generate Signal
-                    </Button>
-                    </form>
-                </Form>
-                </CardContent>
-            </Card>
-            <RecentTradesCard history={history} />
-        </div>
-        <div className="h-full">
-            {isLoading && (
-                <Card className="flex items-center justify-center p-10 h-full">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="ml-4 text-lg">Generating...</p>
-                </Card>
-            )}
-            
-            {error && !isLoading && (
-                <div className="h-full flex items-center justify-center p-4">
-                    <Alert variant="destructive">
-                        <TriangleAlert className="h-4 w-4" />
-                        <AlertTitle>An Error Occurred</AlertTitle>
-                        <AlertDescription>
-                            {error}
-                        </AlertDescription>
-                    </Alert>
-                </div>
-            )}
+                      <Button type="submit" disabled={isLoading} className="w-full">
+                          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Generate Signal
+                      </Button>
+                      </form>
+                  </Form>
+                  </CardContent>
+              </Card>
+              <RecentTradesCard history={history} />
+          </div>
+          <div className="h-full">
+              {isLoading && (
+                  <Card className="flex items-center justify-center p-10 h-full">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <p className="ml-4 text-lg">Generating...</p>
+                  </Card>
+              )}
+              
+              {error && !isLoading && (
+                  <div className="h-full flex items-center justify-center p-4">
+                      <Alert variant="destructive">
+                          <TriangleAlert className="h-4 w-4" />
+                          <AlertTitle>An Error Occurred</AlertTitle>
+                          <AlertDescription>
+                              {error}
+                          </AlertDescription>
+                      </Alert>
+                  </div>
+              )}
 
-            {showResults && !isLoading && !error &&(
-                <div className="animate-in fade-in-50 duration-500 h-full">
-                    <GeneratedSignalCard 
-                        signal={generatedSignal} 
-                        inputs={lastInputs} 
-                        dataSource={dataSource}
-                        chartSeries={chartSeries || []}
-                        timestamp={generationTimestamp}
-                    />
-                </div>
-            )}
-        </div>
-    </div>
+              {showResults && !isLoading && !error &&(
+                  <div className="animate-in fade-in-50 duration-500 h-full">
+                      <GeneratedSignalCard 
+                          signal={generatedSignal} 
+                          inputs={lastInputs} 
+                          dataSource={dataSource}
+                          chartSeries={chartSeries || []}
+                          timestamp={generationTimestamp}
+                      />
+                  </div>
+              )}
+          </div>
+      </div>
+    </TooltipProvider>
   );
 }
 
@@ -493,7 +495,6 @@ const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
                 <CardDescription>A quick look at your last two signals.</CardDescription>
             </CardHeader>
             <CardContent>
-                <TooltipProvider>
                 {recentTrades.length > 0 ? (
                     <div className="space-y-3">
                         {recentTrades.map((trade) => {
@@ -530,7 +531,6 @@ const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
                         <p className="text-sm">No prior trades to show.</p>
                     </div>
                 )}
-                </TooltipProvider>
             </CardContent>
         </Card>
     )
@@ -573,3 +573,6 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
         </Tooltip>
     );
 };
+
+
+    
