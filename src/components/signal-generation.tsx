@@ -69,6 +69,8 @@ type StoredSignal = {
 
 const LAST_SIGNAL_STORAGE_KEY = 'lastGeneratedSignal';
 
+const statusCycle: TradeStatus[] = ['open', 'won', 'lost'];
+
 export default function SignalGeneration({ addTradeToHistory, accountBalance, riskPercentage, history, updateTradeStatus }: SignalGenerationProps) {
   const { settings } = useSettings();
   const [isLoading, setIsLoading] = useState(false);
@@ -316,7 +318,6 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   );
 }
 
-const statusCycle: TradeStatus[] = ['open', 'won', 'lost'];
 const statusConfig: { [key in TradeStatus]: { variant: "secondary" | "default" | "destructive", label: string, className?: string } } = {
     open: { variant: "secondary", label: "Open" },
     won: { variant: "default", className: "bg-green-600 hover:bg-green-700 text-white", label: "Won" },
@@ -566,3 +567,5 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
         </Tooltip>
     );
 };
+
+    

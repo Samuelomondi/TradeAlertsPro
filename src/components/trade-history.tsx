@@ -45,6 +45,9 @@ const statusConfig = {
     lost: { variant: "destructive", label: "Lost" },
 };
 
+const statusCycle: TradeStatus[] = ['open', 'won', 'lost'];
+
+
 export default function TradeHistory({ history, updateTradeStatus, clearHistory, deleteTrade }: TradeHistoryProps) {
   const [pairFilter, setPairFilter] = useState<string | 'all'>('all');
   const [strategyFilter, setStrategyFilter] = useState<StrategyId | 'all'>('all');
@@ -98,6 +101,13 @@ export default function TradeHistory({ history, updateTradeStatus, clearHistory,
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+  
+  const handleStatusClick = (trade: TradeHistoryEntry) => {
+    const currentIndex = statusCycle.indexOf(trade.status);
+    const nextIndex = (currentIndex + 1) % statusCycle.length;
+    const nextStatus = statusCycle[nextIndex];
+    updateTradeStatus(trade.id, nextStatus);
   };
 
 
@@ -211,7 +221,7 @@ export default function TradeHistory({ history, updateTradeStatus, clearHistory,
                     <TableHead>RRR</TableHead>
                     <TableHead>Toolkit</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right min-w-[150px]">Actions</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -269,13 +279,23 @@ export default function TradeHistory({ history, updateTradeStatus, clearHistory,
                             </div>
                             </TableCell>
                             <TableCell>
-                                <Badge variant={statusBadge.variant as any} className={cn(statusBadge.className)}>{statusBadge.label}</Badge>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Badge 
+                                            variant={statusBadge.variant as any} 
+                                            className={cn(statusBadge.className, "cursor-pointer")}
+                                            onClick={() => handleStatusClick(trade)}
+                                        >
+                                            {statusBadge.label}
+                                        </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Click to cycle status</p>
+                                    </TooltipContent>
+                                </Tooltip>
                             </TableCell>
                             <TableCell className="text-right">
                                 <div className="flex gap-1 justify-end">
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-green-500 hover:bg-green-100 hover:text-green-600" title="Mark as Won" onClick={() => updateTradeStatus(trade.id, 'won')}><Check /></Button>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:bg-red-100 hover:text-red-600" title="Mark as Lost" onClick={() => updateTradeStatus(trade.id, 'lost')}><X /></Button>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-gray-600" title="Reset to Open" onClick={() => updateTradeStatus(trade.id, 'open')}><RotateCcw /></Button>
                                     <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/70 hover:bg-destructive/10 hover:text-destructive" title="Delete Trade"><Trash2 /></Button>
@@ -337,3 +357,5 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
         </Tooltip>
     );
 };
+
+    
