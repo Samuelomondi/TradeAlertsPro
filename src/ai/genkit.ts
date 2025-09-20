@@ -18,6 +18,5 @@ export function configureGenkit(apiKey: string): Genkit {
             apiVersion: 'v1beta',
             apiKey: apiKey
         })],
-        model: 'googleai/gemini-2.5-flash',
     });
 }
