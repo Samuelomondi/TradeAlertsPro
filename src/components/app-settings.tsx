@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { useSettings, type AppSettings } from './settings-provider';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { KeyRound, Info, Bell, Send, Eye, EyeOff, CheckCircle, XCircle, Pencil, DollarSign, Percent } from 'lucide-react';
+import { KeyRound, Info, Send, Eye, EyeOff, CheckCircle, XCircle, Pencil, DollarSign, Percent } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
 import {
@@ -88,6 +88,9 @@ export default function AppSettings({ accountBalance, riskPercentage, setAccount
   const isGeminiConfigured = !!form.watch('geminiApiKey');
   const isTwelveDataConfigured = !!form.watch('twelveDataApiKey');
   const isTelegramConfigured = !!form.watch('telegramChatId');
+  const isBalanceConfigured = form.watch('accountBalance') > 0;
+  const isRiskConfigured = form.watch('riskPercentage') > 0;
+
 
   return (
     <Card>
@@ -156,43 +159,34 @@ export default function AppSettings({ accountBalance, riskPercentage, setAccount
 
             <Separator />
             
-            <div className="space-y-4">
-                <h3 className="text-lg font-medium">Risk Management</h3>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="accountBalance"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Account Balance</FormLabel>
-                            <FormControl>
-                            <div className="relative">
-                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input type="number" placeholder="e.g., 1000" className="pl-8" {...field} />
-                            </div>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
+            <div>
+                <h3 className="mb-4 text-lg font-medium">Risk Management</h3>
+                <div className="space-y-2">
+                    <StatusItem
+                        label="Account Balance"
+                        description={`Current: $${form.watch('accountBalance').toLocaleString()}`}
+                        isConfigured={isBalanceConfigured}
+                        form={form}
+                        fieldName="accountBalance"
+                        dialogTitle="Edit Account Balance"
+                        dialogDescription="Set your total account balance for risk calculations."
+                        inputType="number"
+                        inputIcon={<DollarSign />}
                     />
-                    <FormField
-                        control={form.control}
-                        name="riskPercentage"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Risk Per Trade</FormLabel>
-                            <FormControl>
-                            <div className="relative">
-                                <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input type="number" placeholder="e.g., 1" className="pl-8" step="0.1" {...field} />
-                            </div>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
+                    <StatusItem
+                        label="Risk Per Trade"
+                        description={`Current: ${form.watch('riskPercentage')}%`}
+                        isConfigured={isRiskConfigured}
+                        form={form}
+                        fieldName="riskPercentage"
+                        dialogTitle="Edit Risk Per Trade"
+                        dialogDescription="Set the percentage of your balance to risk on a single trade."
+                        inputType="number"
+                        inputProps={{ step: "0.1" }}
+                        inputIcon={<Percent />}
                     />
                 </div>
-                 <p className="text-xs text-muted-foreground pt-2">
+                 <p className="text-xs text-muted-foreground pt-4">
                     These values are used to automatically calculate the lot size for each new trade signal, based on the signal's stop loss.
                 </p>
             </div>
@@ -206,7 +200,7 @@ export default function AppSettings({ accountBalance, riskPercentage, setAccount
   );
 }
 
-const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogTitle, dialogDescription, inputType = 'text', inputIcon, toggleVisibility, showVisibilityToggle, isVisible }: any) => {
+const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogTitle, dialogDescription, inputType = 'text', inputIcon, toggleVisibility, showVisibilityToggle, isVisible, inputProps }: any) => {
     return (
         <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
             <div className="flex items-center gap-3">
@@ -244,6 +238,7 @@ const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogT
                                         placeholder={`Enter ${label}`}
                                         className="pl-8 pr-10"
                                         {...field}
+                                        {...inputProps}
                                     />
                                     {showVisibilityToggle && (
                                         <Button
