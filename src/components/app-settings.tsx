@@ -141,7 +141,7 @@ export default function AppSettings({ accountBalance, riskPercentage, setAccount
               isConfigured={isTelegramConfigured}
               fieldName="telegramChatId"
               dialogTitle="Edit Telegram Chat ID"
-              dialogDescription="Enter your personal Telegram Chat ID to receive notifications."
+              dialogDescription={<TelegramHowTo />}
               inputIcon={<Send />}
               iconInside={true}
               schema={telegramSchema}
@@ -234,7 +234,7 @@ const StatusItem = ({ label, description, isConfigured, fieldName, dialogTitle, 
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>{dialogTitle}</DialogTitle>
-                        <p className="text-sm text-muted-foreground">{dialogDescription}</p>
+                        <div className="text-sm text-muted-foreground">{dialogDescription}</div>
                     </DialogHeader>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} id={`form-${fieldName}`}>
@@ -286,4 +286,26 @@ const StatusItem = ({ label, description, isConfigured, fieldName, dialogTitle, 
     )
 }
 
+const TelegramHowTo = () => (
+    <div className="space-y-3 text-left">
+        <p>Follow these steps to get your personal Chat ID for notifications:</p>
+        <ol className="list-decimal list-inside space-y-2">
+            <li>
+                Start a chat with the TradeAlert bot:
+                <a 
+                    href="https://t.me/vibecodefxbot" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="ml-2 inline-flex items-center gap-1 text-primary underline"
+                >
+                    @vibecodefxbot <Send className="w-3 h-3" />
+                </a>
+            </li>
+            <li>
+                From another bot like <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="text-primary underline">@userinfobot</a>, get your user ID.
+            </li>
+            <li>Copy your ID and paste it into the input field below.</li>
+        </ol>
+    </div>
+);
     
