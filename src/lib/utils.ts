@@ -61,5 +61,29 @@ export function formatSignalMessage(signal: TradeSignal, currencyPair: string, t
     `.trim();
 }
 
+/**
+ * Checks if the global forex market is open.
+ * The market is considered open from Sunday 21:00 UTC to Friday 21:00 UTC.
+ * @returns {boolean} True if the market is open, false otherwise.
+ */
+export function isMarketOpen(): boolean {
+    const now = new Date();
+    const currentUtcDay = now.getUTCDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+    const currentUtcHour = now.getUTCHours();
 
+    // Market is closed on Saturday.
+    if (currentUtcDay === 6) {
+        return false;
+    }
+    // Market is closed on Friday after 21:00 UTC.
+    if (currentUtcDay === 5 && currentUtcHour >= 21) {
+        return false;
+    }
+    // Market is closed on Sunday before 21:00 UTC.
+    if (currentUtcDay === 0 && currentUtcHour < 21) {
+        return false;
+    }
+    // Otherwise, the market is open.
+    return true;
+}
     

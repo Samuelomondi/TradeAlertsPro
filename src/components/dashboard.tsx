@@ -32,6 +32,7 @@ import AppSettings from "./app-settings";
 
 import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
 import TradePerformance from "./trade-performance";
+import { isMarketOpen } from "@/lib/utils";
 
 type View = "signals" | "history" | "info" | "market" | "news" | "help";
 
@@ -128,6 +129,14 @@ export default function Dashboard() {
 
 function AppSidebar({ activeView, setActiveView }: { activeView: View; setActiveView: (view: View) => void; }) {
   const { toggleSidebar, isMobile } = useSidebar();
+  const [marketIsOpen, setMarketIsOpen] = useState(true);
+
+  useEffect(() => {
+    const checkMarket = () => setMarketIsOpen(isMarketOpen());
+    checkMarket();
+    const interval = setInterval(checkMarket, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
 
   const menuItems: { id: View; label: string; icon: React.ElementType }[] = [
     { id: "signals", label: "Show Signals", icon: BarChart2 },
@@ -168,8 +177,17 @@ function AppSidebar({ activeView, setActiveView }: { activeView: View; setActive
       <SidebarFooter>
          <Separator className="my-2"/>
          <div className="flex items-center justify-center p-2 text-xs text-muted-foreground">
-             <span className="text-green-500">●</span>
-             <span className="ml-2">Status: Connected</span>
+            {marketIsOpen ? (
+                <>
+                    <span className="text-green-500">●</span>
+                    <span className="ml-2">Market: Open</span>
+                </>
+            ) : (
+                <>
+                    <span className="text-red-500">●</span>
+                    <span className="ml-2">Market: Closed</span>
+                </>
+            )}
          </div>
       </SidebarFooter>
     </Sidebar>

@@ -1,6 +1,7 @@
 
 import {z} from 'zod';
 import fetch from 'node-fetch';
+import { isMarketOpen } from '@/lib/utils';
 
 // Schema for the latest indicator values used by the AI
 export const LatestIndicatorsSchema = z.object({
@@ -89,9 +90,10 @@ export async function getMarketData(
   timeframe: string,
   apiKey?: string
 ): Promise<MarketDataResponse> {
-  // Clear check for API key before making any calls.
-  if (!apiKey || apiKey.startsWith("YOUR_")) {
-    console.warn('Twelve Data API key is not configured. Falling back to mock data.');
+  // Fallback to mock data if market is closed, or if API key is missing.
+  if (!isMarketOpen() || !apiKey || apiKey.startsWith("YOUR_")) {
+    const reason = !isMarketOpen() ? 'Market is closed' : 'Twelve Data API key is not configured';
+    console.warn(`${reason}. Falling back to mock data.`);
     const { latest, series } = generateMockMarketData(currencyPair);
     return { latest, series, source: 'mock' };
   }
