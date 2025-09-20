@@ -3,16 +3,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Globe, Clock, Layers } from 'lucide-react';
+import { Globe, Clock, Layers, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CURRENCY_PAIRS } from '@/lib/constants';
 
 interface Market {
-  name: string;
+  name: 'Sydney' | 'London' | 'New York' | 'Tokyo';
   openUtc: number;
   closeUtc: number;
 }
 
 interface Overlap {
+  id: 'SYD-TKY' | 'LDN-NYK' | 'LDN-TKY';
   name: string;
   startUtc: number;
   endUtc: number;
@@ -26,8 +28,9 @@ const markets: Market[] = [
 ];
 
 const overlaps: Overlap[] = [
-    { name: 'Sydney/Tokyo', startUtc: 0, endUtc: 6 },
-    { name: 'London/New York', startUtc: 13, endUtc: 16 },
+    { id: 'LDN-TKY', name: 'London/Tokyo', startUtc: 8, endUtc: 9 },
+    { id: 'SYD-TKY', name: 'Sydney/Tokyo', startUtc: 0, endUtc: 6 },
+    { id: 'LDN-NYK', name: 'London/New York', startUtc: 13, endUtc: 16 },
 ];
 
 const sortedMarkets = [...markets].sort((a, b) => {
@@ -35,6 +38,16 @@ const sortedMarkets = [...markets].sort((a, b) => {
     const bOpen = b.name === 'Sydney' ? -2 : b.openUtc;
     return aOpen - bOpen;
 });
+
+const pairOverlapMap: Record<string, Overlap['id'][]> = {
+    'EUR/USD': ['LDN-NYK'], 'GBP/USD': ['LDN-NYK'],
+    'USD/CHF': ['LDN-NYK'],
+    'USD/JPY': ['LDN-NYK', 'LDN-TKY'],
+    'AUD/USD': ['SYD-TKY'], 'NZD/USD': ['SYD-TKY'],
+    'USD/CAD': ['LDN-NYK'],
+    'EUR/JPY': ['LDN-TKY'], 'GBP/JPY': ['LDN-TKY'],
+};
+
 
 function getMarketStatus(market: Market, now: Date) {
     const currentUtcDay = now.getUTCDay();
@@ -67,7 +80,7 @@ function formatUtcHourToLocal(utcHour: number, baseDate: Date) {
     return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
-export default function MarketHours() {
+export default function MarketHours({ selectedPair }: { selectedPair: string }) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -80,6 +93,8 @@ export default function MarketHours() {
       minute: '2-digit',
       timeZoneName: 'short'
   });
+
+  const relevantOverlapIds = pairOverlapMap[selectedPair] || [];
 
   return (
     <div className="space-y-8">
@@ -113,14 +128,25 @@ export default function MarketHours() {
             <CardHeader>
                 <CardTitle>Session Overlaps</CardTitle>
                 <CardDescription>
-                    These periods often have the highest trading volume and volatility, making them optimal times for trading.
+                    These periods often have the highest trading volume and volatility. The most relevant overlap for <span className="font-bold text-primary">{selectedPair}</span> is highlighted.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  {overlaps.map((overlap) => {
                     const isActive = getOverlapStatus(overlap, currentTime);
+                    const isRelevant = relevantOverlapIds.includes(overlap.id);
                     return (
-                        <Card key={overlap.name} className={cn("flex flex-col items-center p-6", isActive ? 'bg-green-100 dark:bg-green-900/20' : 'bg-muted')}>
+                        <Card key={overlap.name} className={cn(
+                            "flex flex-col items-center p-6 relative", 
+                            isActive ? 'bg-green-100 dark:bg-green-900/20' : 'bg-muted',
+                            isRelevant && "border-primary border-2"
+                        )}>
+                            {isRelevant && (
+                                <div className="absolute top-2 right-2 flex items-center gap-1 text-xs text-primary font-semibold">
+                                    <Star className="w-4 h-4" />
+                                    <span>Relevant</span>
+                                </div>
+                            )}
                             <Layers className={cn("w-10 h-10 mb-2", isActive ? 'text-green-600' : 'text-muted-foreground')} />
                             <h3 className="text-lg font-semibold">{overlap.name}</h3>
                             <p className={cn("font-bold", isActive ? 'text-green-600' : 'text-muted-foreground')}>

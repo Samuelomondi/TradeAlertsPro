@@ -33,6 +33,7 @@ import AppSettings from "./app-settings";
 import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
 import TradePerformance from "./trade-performance";
 import { isMarketOpen } from "@/lib/utils";
+import { CURRENCY_PAIRS } from "@/lib/constants";
 
 type View = "signals" | "history" | "info" | "market" | "news" | "help";
 
@@ -60,6 +61,8 @@ export default function Dashboard() {
   const [history, setHistory] = useState<TradeHistoryEntry[]>([]);
   const [accountBalance, setAccountBalance] = useState(1000);
   const [riskPercentage, setRiskPercentage] = useState(1);
+  const [selectedPair, setSelectedPair] = useState(CURRENCY_PAIRS[0]);
+
 
   // Load history from localStorage on initial client-side render
   useEffect(() => {
@@ -110,7 +113,7 @@ export default function Dashboard() {
                 </div>
                 <SidebarTrigger />
             </header>
-            {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} history={history} updateTradeStatus={updateTradeStatus} />}
+            {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} history={history} updateTradeStatus={updateTradeStatus} selectedPair={selectedPair} setSelectedPair={setSelectedPair} />}
             {activeView === 'history' && (
                 <div className="space-y-8">
                     <TradePerformance history={history} />
@@ -118,7 +121,7 @@ export default function Dashboard() {
                 </div>
             )}
             {activeView === 'info' && <AppSettings accountBalance={accountBalance} riskPercentage={riskPercentage} setAccountBalance={setAccountBalance} setRiskPercentage={setRiskPercentage} />}
-            {activeView === 'market' && <MarketHours />}
+            {activeView === 'market' && <MarketHours selectedPair={selectedPair} />}
             {activeView === 'news' && <NewsWarning />}
             {activeView === 'help' && <Help />}
         </main>

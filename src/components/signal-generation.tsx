@@ -57,6 +57,8 @@ type SignalGenerationProps = {
   accountBalance: number;
   riskPercentage: number;
   history: TradeHistoryEntry[];
+  selectedPair: string;
+  setSelectedPair: (pair: string) => void;
 };
 
 type StoredSignal = {
@@ -71,7 +73,7 @@ const LAST_SIGNAL_STORAGE_KEY = 'lastGeneratedSignal';
 
 const statusCycle: TradeStatus[] = ['open', 'won', 'lost'];
 
-export default function SignalGeneration({ addTradeToHistory, accountBalance, riskPercentage, history, updateTradeStatus }: SignalGenerationProps) {
+export default function SignalGeneration({ addTradeToHistory, accountBalance, riskPercentage, history, updateTradeStatus, selectedPair, setSelectedPair }: SignalGenerationProps) {
   const { settings } = useSettings();
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSignal, setGeneratedSignal] = useState<TradeSignal | null>(null);
@@ -93,6 +95,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
         setChartSeries(series || []);
         setLastInputs(inputs);
         setGenerationTimestamp(timestamp);
+        setSelectedPair(inputs.currencyPair);
       }
     } catch (error) {
       console.error("Failed to parse last signal from localStorage", error);
@@ -107,11 +110,16 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      currencyPair: "USD/CAD",
+      currencyPair: selectedPair,
       timeframe: "1H",
       strategy: "trend",
     },
   });
+  
+  useEffect(() => {
+      form.setValue('currencyPair', selectedPair);
+  }, [selectedPair, form]);
+
 
   async function onSubmit(values: FormValues) {
     setIsLoading(true);
@@ -218,7 +226,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel>Currency Pair</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={(value) => { field.onChange(value); setSelectedPair(value); }} value={field.value}>
                                 <FormControl>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a pair" />
@@ -532,4 +540,5 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
 
 
     
+
 
