@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Globe, Clock, Layers, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CURRENCY_PAIRS } from '@/lib/constants';
+import { getMarketStatus, getOverlapStatus, overlaps, markets, pairOverlapMap } from '@/lib/utils';
 
 interface Market {
   name: 'Sydney' | 'London' | 'New York' | 'Tokyo';
@@ -13,66 +14,11 @@ interface Market {
   closeUtc: number;
 }
 
-interface Overlap {
-  id: 'SYD-TKY' | 'LDN-NYK' | 'LDN-TKY';
-  name: string;
-  startUtc: number;
-  endUtc: number;
-}
-
-const markets: Market[] = [
-  { name: 'Sydney', openUtc: 22, closeUtc: 6 },
-  { name: 'London', openUtc: 8, closeUtc: 16 },
-  { name: 'New York', openUtc: 13, closeUtc: 21 },
-  { name: 'Tokyo', openUtc: 0, closeUtc: 8 },
-];
-
-const overlaps: Overlap[] = [
-    { id: 'LDN-TKY', name: 'London/Tokyo', startUtc: 8, endUtc: 9 },
-    { id: 'SYD-TKY', name: 'Sydney/Tokyo', startUtc: 0, endUtc: 6 },
-    { id: 'LDN-NYK', name: 'London/New York', startUtc: 13, endUtc: 16 },
-];
-
 const sortedMarkets = [...markets].sort((a, b) => {
     const aOpen = a.name === 'Sydney' ? -2 : a.openUtc;
     const bOpen = b.name === 'Sydney' ? -2 : b.openUtc;
     return aOpen - bOpen;
 });
-
-const pairOverlapMap: Record<string, Overlap['id'][]> = {
-    'EUR/USD': ['LDN-NYK'], 'GBP/USD': ['LDN-NYK'],
-    'USD/CHF': ['LDN-NYK'],
-    'USD/JPY': ['LDN-NYK', 'LDN-TKY'],
-    'AUD/USD': ['SYD-TKY'], 'NZD/USD': ['SYD-TKY'],
-    'USD/CAD': ['LDN-NYK'],
-    'EUR/JPY': ['LDN-TKY'], 'GBP/JPY': ['LDN-TKY'],
-};
-
-
-function getMarketStatus(market: Market, now: Date) {
-    const currentUtcDay = now.getUTCDay();
-    const currentUtcHour = now.getUTCHours();
-    
-    if (currentUtcDay === 6 || (currentUtcDay === 5 && currentUtcHour >= 21) || (currentUtcDay === 0 && currentUtcHour < 21)) {
-        return false;
-    }
-
-    if (market.openUtc < market.closeUtc) {
-        return currentUtcHour >= market.openUtc && currentUtcHour < market.closeUtc;
-    } else {
-        return currentUtcHour >= market.openUtc || currentUtcHour < market.closeUtc;
-    }
-}
-
-function getOverlapStatus(overlap: Overlap, now: Date) {
-    const currentUtcDay = now.getUTCDay();
-    const currentUtcHour = now.getUTCHours();
-    
-    if (currentUtcDay === 6 || currentUtcDay === 0) return false;
-    if (currentUtcDay === 5 && currentUtcHour >= overlap.endUtc) return false;
-
-    return currentUtcHour >= overlap.startUtc && currentUtcHour < overlap.endUtc;
-}
 
 function formatUtcHourToLocal(utcHour: number, baseDate: Date) {
     const date = new Date(baseDate);

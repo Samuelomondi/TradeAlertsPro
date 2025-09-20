@@ -29,17 +29,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, CheckCircle, XCircle, ArrowUp, ArrowDown, TriangleAlert, History, Minus, Pause, TrendingUp, ArrowRightLeft, Maximize, Info } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, ArrowUp, ArrowDown, TriangleAlert, History, Minus, Pause, TrendingUp, ArrowRightLeft, Maximize, Info, Star, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CURRENCY_PAIRS, TIMEFRAMES, STRATEGIES, StrategyId } from "@/lib/constants";
 import type { TradeSignal, TradeHistoryEntry, TradeStatus } from "@/lib/types";
-import { cn, formatDate, isMarketOpen } from "@/lib/utils";
+import { cn, formatDate, isMarketOpen, getOverlapStatus, pairOverlapMap, overlaps } from "@/lib/utils";
 import type { MarketDataSource, MarketDataSeries } from "@/services/market-data";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import MarketChart from "./market-chart";
-import { Separator } from "./ui/separator";
 import { useSettings } from "./settings-provider";
 
 
@@ -70,8 +69,6 @@ type StoredSignal = {
 };
 
 const LAST_SIGNAL_STORAGE_KEY = 'lastGeneratedSignal';
-
-const statusCycle: TradeStatus[] = ['open', 'won', 'lost'];
 
 export default function SignalGeneration({ addTradeToHistory, accountBalance, riskPercentage, history, updateTradeStatus, selectedPair, setSelectedPair }: SignalGenerationProps) {
   const { settings } = useSettings();
@@ -206,15 +203,18 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                     <CardDescription>
                         Select a pair and timeframe to generate a signal with live market data.
                     </CardDescription>
-                    <Alert variant={marketIsOpen ? "default" : "destructive"} className="mt-4">
-                        <Info className="h-4 w-4" />
-                        <AlertTitle>
-                            {marketIsOpen ? "Market is Open" : "Market is Closed"}
-                        </AlertTitle>
-                        <AlertDescription>
-                            {marketIsOpen ? "Live market data is being used." : "Signals are generated using mock data for practice."}
-                        </AlertDescription>
-                    </Alert>
+                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Alert variant={marketIsOpen ? "default" : "destructive"}>
+                            <Info className="h-4 w-4" />
+                            <AlertTitle>
+                                {marketIsOpen ? "Market is Open" : "Market is Closed"}
+                            </AlertTitle>
+                            <AlertDescription>
+                                {marketIsOpen ? "Live market data is being used." : "Using mock data for practice."}
+                            </AlertDescription>
+                        </Alert>
+                        <OptimalConditionsIndicator selectedPair={selectedPair} />
+                    </div>
                 </CardHeader>
                 <CardContent>
                 <Form {...form}>
@@ -339,11 +339,47 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
   );
 }
 
-const statusConfig: { [key in TradeStatus]: { variant: "secondary" | "default" | "destructive", label: string, className?: string } } = {
-    open: { variant: "secondary", label: "Open" },
-    won: { variant: "default", className: "bg-green-600 hover:bg-green-700 text-white", label: "Won" },
-    lost: { variant: "destructive", label: "Lost" },
+const OptimalConditionsIndicator = ({ selectedPair }: { selectedPair: string }) => {
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000 * 60); // Update every minute
+        return () => clearInterval(timer);
+    }, []);
+
+    const relevantOverlapIds = pairOverlapMap[selectedPair] || [];
+    const relevantOverlaps = overlaps.filter(o => relevantOverlapIds.includes(o.id));
+    
+    if (relevantOverlaps.length === 0) {
+        return (
+             <Alert variant="default" className="border-yellow-500/50 text-yellow-600 dark:text-yellow-400 [&>svg]:text-yellow-600">
+                <Activity className="h-4 w-4" />
+                <AlertTitle>Standard Volatility</AlertTitle>
+                <AlertDescription>
+                    No major session overlap.
+                </AlertDescription>
+            </Alert>
+        )
+    }
+
+    const activeOverlap = relevantOverlaps.find(o => getOverlapStatus(o, currentTime));
+
+    const isOptimal = !!activeOverlap;
+    const sessionName = activeOverlap ? activeOverlap.name : relevantOverlaps[0].name;
+
+     return (
+        <Alert variant="default" className={cn(isOptimal ? "border-green-500/50 text-green-600 dark:text-green-400 [&>svg]:text-green-600" : "border-yellow-500/50 text-yellow-600 dark:text-yellow-400 [&>svg]:text-yellow-600")}>
+            <Star className="h-4 w-4" />
+            <AlertTitle>
+                {isOptimal ? "Optimal Conditions" : "Sub-Optimal Conditions"}
+            </AlertTitle>
+            <AlertDescription>
+                {sessionName} overlap is {isOptimal ? "active." : "inactive."}
+            </AlertDescription>
+        </Alert>
+    );
 };
+
 
 const signalStyles = {
     Buy: {
@@ -537,8 +573,3 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
         </Tooltip>
     );
 };
-
-
-    
-
-

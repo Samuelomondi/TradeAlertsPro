@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { TradeSignal } from "./types";
@@ -86,4 +87,64 @@ export function isMarketOpen(): boolean {
     // Otherwise, the market is open.
     return true;
 }
+
+// Overlap logic for Market Hours and Signal Generation
+interface Market {
+  name: 'Sydney' | 'London' | 'New York' | 'Tokyo';
+  openUtc: number;
+  closeUtc: number;
+}
+
+export interface Overlap {
+  id: 'SYD-TKY' | 'LDN-NYK' | 'LDN-TKY';
+  name: string;
+  startUtc: number;
+  endUtc: number;
+}
+
+export const markets: Market[] = [
+  { name: 'Sydney', openUtc: 22, closeUtc: 6 },
+  { name: 'London', openUtc: 8, closeUtc: 16 },
+  { name: 'New York', openUtc: 13, closeUtc: 21 },
+  { name: 'Tokyo', openUtc: 0, closeUtc: 8 },
+];
+
+export const overlaps: Overlap[] = [
+    { id: 'LDN-TKY', name: 'London/Tokyo', startUtc: 8, endUtc: 9 },
+    { id: 'SYD-TKY', name: 'Sydney/Tokyo', startUtc: 0, endUtc: 6 },
+    { id: 'LDN-NYK', name: 'London/New York', startUtc: 13, endUtc: 16 },
+];
+
+export const pairOverlapMap: Record<string, Overlap['id'][]> = {
+    'EUR/USD': ['LDN-NYK'], 'GBP/USD': ['LDN-NYK'],
+    'USD/CHF': ['LDN-NYK'],
+    'USD/JPY': ['LDN-NYK', 'LDN-TKY'],
+    'AUD/USD': ['SYD-TKY'], 'NZD/USD': ['SYD-TKY'],
+    'USD/CAD': ['LDN-NYK'],
+    'EUR/JPY': ['LDN-TKY'], 'GBP/JPY': ['LDN-TKY'],
+};
+
+export function getMarketStatus(market: Market, now: Date) {
+    const currentUtcDay = now.getUTCDay();
+    const currentUtcHour = now.getUTCHours();
     
+    if (currentUtcDay === 6 || (currentUtcDay === 5 && currentUtcHour >= 21) || (currentUtcDay === 0 && currentUtcHour < 21)) {
+        return false;
+    }
+
+    if (market.openUtc < market.closeUtc) {
+        return currentUtcHour >= market.openUtc && currentUtcHour < market.closeUtc;
+    } else {
+        return currentUtcHour >= market.openUtc || currentUtcHour < market.closeUtc;
+    }
+}
+
+export function getOverlapStatus(overlap: Overlap, now: Date) {
+    const currentUtcDay = now.getUTCDay();
+    const currentUtcHour = now.getUTCHours();
+    
+    if (currentUtcDay === 6 || currentUtcDay === 0) return false;
+    if (currentUtcDay === 5 && currentUtcHour >= overlap.endUtc) return false;
+
+    return currentUtcHour >= overlap.startUtc && currentUtcHour < overlap.endUtc;
+}
