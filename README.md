@@ -5,11 +5,13 @@ TradeAlert is a web application designed to assist forex traders by generating t
 ## Features
 
 - **On-Screen Setup**: No need to manage environment files. Enter your API keys for Gemini, Twelve Data, and Telegram directly into the application's settings page. Your keys are stored securely in your browser's local storage.
-- **Logic-Based Signal Generation**: Input a currency pair and timeframe to get a trade signal based on a consistent, deterministic set of rules. The system analyzes technical indicators (EMA, RSI, ATR) to generate a signal with an entry, stop loss, take profit, and a calculated lot size.
+- **Multi-Strategy Signal Generation**: Input a currency pair, timeframe, and choose a strategy (Trend Following, Mean Reversion, or Breakout) to get a trade signal based on a consistent, deterministic set of rules. The system analyzes technical indicators (EMA, RSI, ATR) to generate a signal with an entry, stop loss, take profit, and a calculated lot size.
 - **Live Market Chart**: Each generated signal is accompanied by an interactive chart displaying recent price action and the EMA (20/50) indicators, providing immediate visual context for the trade signal.
 - **Telegram Notifications**: Automatically sends generated trade signals to a designated Telegram chat, allowing you to receive trade ideas on the go.
 - **Persistent Trade History**: Keeps a running log of all generated signals, saved in your browser's local storage.
 - **Interactive Status Updates**: Easily update the status of each trade (Won, Lost, Open) by clicking the status badge on the main signal card, the recent trades list, or in the full history table.
+- **Advanced History Filtering**: Filter your entire trade history by currency pair, strategy, or trade status to easily analyze performance.
+- **CSV Export**: Export your filtered trade history to a CSV file for in-depth analysis in spreadsheet applications like Excel or Google Sheets.
 - **Trade Performance Dashboard**: A visual summary of your trading performance, including total trades, wins, losses, and your win rate, calculated from your trade history.
 - **Risk Settings**: Configure your account balance and risk percentage to automatically calculate the appropriate position size for every trade signal.
 - **Live Market Hours**: A live dashboard showing the open/closed status of major forex trading sessions (London, New York, Tokyo) to help you understand the current market environment.

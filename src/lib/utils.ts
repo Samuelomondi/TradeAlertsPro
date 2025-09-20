@@ -19,6 +19,23 @@ export function formatDate(date: Date) {
     });
 }
 
+export function formatDateOnly(date: Date) {
+    return date.toLocaleDateString('en-US', {
+        year: '2-digit',
+        month: '2-digit',
+        day: '2-digit',
+    });
+}
+
+export function formatTimeOnly(date: Date) {
+    return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    });
+}
+
+
 export function formatSignalMessage(signal: TradeSignal, currencyPair: string, timeframe: string, source: MarketDataSource): string {
     const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
     const sourceIndicator = source === 'live' ? '✅ Live' : '⚠️ Mock';
@@ -26,6 +43,7 @@ export function formatSignalMessage(signal: TradeSignal, currencyPair: string, t
 
     return `
 *New Signal: ${currencyPair} (${timeframe})*
+*Strategy:* ${signal.strategy}
 *Direction:* ${signal.signal} ${signalEmoji}
 ----------------------------------------
 - *Entry:* \`${signal.entry.toFixed(5)}\`

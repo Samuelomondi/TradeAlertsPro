@@ -1,8 +1,11 @@
 
 import { TradeSignalOutput } from "@/ai/flows/signal-generation-gen-ai";
 import type { MarketDataSource } from "@/services/market-data";
+import type { StrategyId } from "./constants";
 
-export type TradeSignal = TradeSignalOutput;
+export type TradeSignal = TradeSignalOutput & {
+    strategy: StrategyId;
+};
 
 export type TradeStatus = 'open' | 'won' | 'lost';
 
@@ -16,3 +19,4 @@ export type TradeHistoryEntry = {
     source: MarketDataSource;
     rrr: string;
 };
+

@@ -10,10 +10,12 @@
  */
 import {LatestIndicators, LatestIndicatorsSchema} from '@/services/market-data';
 import {z} from 'genkit';
+import { StrategyId } from '@/lib/constants';
 
 const TradeSignalInputSchema = z.object({
   currencyPair: z.string().describe('The currency pair to analyze (e.g., EUR/USD).'),
   timeframe: z.string().describe('The timeframe for analysis (e.g., 1H, 4H, 1D).'),
+  strategy: z.custom<StrategyId>().describe('The trading strategy to use.'),
   accountBalance: z.number().describe('The account balance for risk calculation.'),
   riskPercentage: z.number().describe('The risk percentage for lot size calculation.'),
   marketData: LatestIndicatorsSchema,
@@ -24,6 +26,7 @@ export type TradeSignalInput = z.infer<typeof TradeSignalInputSchema>;
 const TradeSignalOutputSchema = z.object({
   trend: z.string().describe('The identified trend (e.g., Bullish, Bearish, Neutral).'),
   signal: z.string().describe('The trade signal (e.g., Buy, Sell, Hold).'),
+  strategy: z.custom<StrategyId>().describe('The trading strategy used.'),
   entry: z.number().describe('The recommended entry price.'),
   stopLoss: z.number().describe('The recommended stop loss price.'),
   takeProfit: z.number().describe('The recommended take profit price.'),
@@ -40,7 +43,7 @@ export type TradeSignalOutput = z.infer<typeof TradeSignalOutputSchema>;
  * @returns A promise that resolves to the generated trade signal.
  */
 export async function generateTradeSignal(input: TradeSignalInput): Promise<TradeSignalOutput> {
-  const { marketData, accountBalance, riskPercentage, currencyPair } = input;
+  const { marketData, accountBalance, riskPercentage, currencyPair, strategy } = input;
   const { currentPrice, ema20, ema50, rsi, atr, macdHistogram, bollingerUpper, bollingerLower } = marketData;
 
   // 1. Determine Trend
@@ -51,12 +54,21 @@ export async function generateTradeSignal(input: TradeSignalInput): Promise<Trad
     trend = 'Bearish';
   }
 
-  // 2. Determine Signal
+  // 2. Determine Signal based on Strategy
   let signal: 'Buy' | 'Sell' | 'Hold' = 'Hold';
-  if (trend === 'Bullish' && rsi < 70) { // Trend is up, not overbought
-    signal = 'Buy';
-  } else if (trend === 'Bearish' && rsi > 30) { // Trend is down, not oversold
-    signal = 'Sell';
+  switch (strategy) {
+      case 'trend':
+        if (trend === 'Bullish' && rsi < 70) signal = 'Buy';
+        else if (trend === 'Bearish' && rsi > 30) signal = 'Sell';
+        break;
+      case 'reversion':
+        if (trend === 'Bullish' && rsi < 30) signal = 'Buy'; // Oversold in uptrend
+        else if (trend === 'Bearish' && rsi > 70) signal = 'Sell'; // Overbought in downtrend
+        break;
+      case 'breakout':
+         if (currentPrice > bollingerUpper) signal = 'Buy';
+         else if (currentPrice < bollingerLower) signal = 'Sell';
+         break;
   }
 
   // 3. Calculate Entry, Stop Loss, and Take Profit
@@ -64,7 +76,7 @@ export async function generateTradeSignal(input: TradeSignalInput): Promise<Trad
   let stopLoss = entry;
   let takeProfit = entry;
   const riskRewardRatio = 1.5;
-  const atrMultiplier = 1.5; // Standard ATR multiplier for stop loss
+  const atrMultiplier = 1.5;
 
   if (signal === 'Buy') {
     stopLoss = entry - (atr * atrMultiplier);
@@ -84,8 +96,7 @@ export async function generateTradeSignal(input: TradeSignalInput): Promise<Trad
     lotSize = riskAmount / (stopLossPips * pipValue);
   }
   
-  // Handle cases where lot size is too small or large, or zero
-  lotSize = Math.max(0.01, Math.min(lotSize, 100)); // Clamp between 0.01 and 100 lots
+  lotSize = Math.max(0.01, Math.min(lotSize, 100));
   if (signal === 'Hold') {
       lotSize = 0;
   }
@@ -98,6 +109,7 @@ export async function generateTradeSignal(input: TradeSignalInput): Promise<Trad
   return {
     trend,
     signal,
+    strategy,
     entry,
     stopLoss,
     takeProfit,

@@ -2,17 +2,20 @@
 "use server";
 
 import { z } from "zod";
-import { generateTradeSignal, type TradeSignalOutput } from "@/ai/flows/signal-generation-gen-ai";
+import { generateTradeSignal } from "@/ai/flows/signal-generation-gen-ai";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { formatSignalMessage } from "@/lib/utils";
 import { getMarketData } from "@/services/market-data";
 import { getEconomicNews, type EconomicEvent } from "@/ai/flows/economic-news-flow";
 import type { MarketDataSource, MarketDataSeries } from "@/services/market-data";
 import { getNewsSentiment, type NewsSentimentOutput } from "@/ai/flows/news-sentiment-flow";
+import type { TradeSignal } from "@/lib/types";
+import { StrategyId } from "@/lib/constants";
 
 const signalSchema = z.object({
   currencyPair: z.string(),
   timeframe: z.string(),
+  strategy: z.custom<StrategyId>(),
   accountBalance: z.coerce.number(),
   riskPercentage: z.coerce.number(),
   geminiApiKey: z.string().min(1, "Gemini API Key is required."),
@@ -21,7 +24,7 @@ const signalSchema = z.object({
 });
 
 export type GenerateSignalSuccess = {
-    signal: TradeSignalOutput;
+    signal: TradeSignal;
     source: MarketDataSource;
     series: MarketDataSeries[];
 }

@@ -29,9 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, CheckCircle, XCircle, ArrowUp, ArrowDown, TriangleAlert, History, Minus, Pause } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, ArrowUp, ArrowDown, TriangleAlert, History, Minus, Pause, TrendingUp, ArrowRightLeft, Maximize } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { CURRENCY_PAIRS, TIMEFRAMES } from "@/lib/constants";
+import { CURRENCY_PAIRS, TIMEFRAMES, STRATEGIES, StrategyId } from "@/lib/constants";
 import type { TradeSignal, TradeHistoryEntry, TradeStatus } from "@/lib/types";
 import { cn, formatDate } from "@/lib/utils";
 import type { MarketDataSource, MarketDataSeries } from "@/services/market-data";
@@ -46,6 +46,7 @@ import { useSettings } from "./settings-provider";
 const formSchema = z.object({
   currencyPair: z.string().min(1, "Currency pair is required."),
   timeframe: z.string().min(1, "Timeframe is required."),
+  strategy: z.custom<StrategyId>(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -100,6 +101,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
     defaultValues: {
       currencyPair: "USD/CAD",
       timeframe: "1H",
+      strategy: "trend",
     },
   });
 
@@ -158,7 +160,7 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
 
         const historyEntry: TradeHistoryEntry = {
             id: timestamp,
-            timestamp: formatDate(new Date(timestamp)),
+            timestamp: timestamp,
             currencyPair: values.currencyPair,
             timeframe: values.timeframe,
             signal: signal,
@@ -238,6 +240,33 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                         )}
                         />
                     </div>
+                     <FormField
+                        control={form.control}
+                        name="strategy"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Strategy</FormLabel>
+                             <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a strategy" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                {STRATEGIES.map((strategy) => (
+                                    <SelectItem key={strategy.id} value={strategy.id}>
+                                       <div className="flex items-center gap-2">
+                                            <strategy.icon className="w-4 h-4" />
+                                            <span>{strategy.name}</span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
 
                     <Button type="submit" disabled={isLoading} className="w-full">
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -336,6 +365,8 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestam
 
     const styles = signalStyles[signal.signal as keyof typeof signalStyles] || signalStyles.Hold;
     const Icon = styles.icon;
+    const strategy = STRATEGIES.find(s => s.id === signal.strategy);
+    const StrategyIcon = strategy?.icon || Pause;
     
     return (
         <Card className={cn(
@@ -384,7 +415,10 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestam
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                     <InfoItem label="Timeframe" value={inputs.timeframe} />
-                    <InfoItem label="Trend" value={signal.trend} />
+                    <div className="flex items-center gap-2">
+                        <InfoItem label="Strategy" value={strategy?.name || "N/A"} />
+                        <StrategyIcon className="w-4 h-4" />
+                    </div>
                     <InfoItem label="Entry" value={signal.entry.toFixed(5)} />
                     <InfoItem label="Stop Loss (SL)" value={signal.stopLoss.toFixed(5)} />
                     <InfoItem label="Take Profit (TP)" value={signal.takeProfit.toFixed(5)} />
@@ -434,17 +468,23 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
                     <div className="space-y-3">
                         {recentTrades.map((trade) => {
                              const config = statusConfig[trade.status];
+                             const strategy = STRATEGIES.find(s => s.id === trade.signal.strategy);
+                             const StrategyIcon = strategy?.icon || Pause;
                              return (
                                 <div key={trade.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                                     <div className="flex items-center gap-3">
                                         {signalIcon(trade.signal.signal)}
                                         <div>
                                             <p className="font-semibold">{trade.currencyPair} <span className="font-normal text-muted-foreground">({trade.timeframe})</span></p>
-                                            <p className="text-xs text-muted-foreground">{trade.timestamp}</p>
+                                            <p className="text-xs text-muted-foreground">{formatDate(new Date(trade.timestamp))}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <div className="flex items-center gap-1.5 text-xs">
+                                             <Tooltip>
+                                                <TooltipTrigger><StrategyIcon className="w-4 h-4" /></TooltipTrigger>
+                                                <TooltipContent><p>{strategy?.name}</p></TooltipContent>
+                                            </Tooltip>
                                             <ConfirmationItem confirmed={trade.signal.macdConfirmation} />
                                             <ConfirmationItem confirmed={trade.signal.bollingerConfirmation} />
                                             <DataSourceItem source={trade.source} />
@@ -474,6 +514,9 @@ const RecentTradesCard = ({ history, updateTradeStatus }: { history: TradeHistor
                         <Separator className="my-4" />
                         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
                             <span className="font-semibold">Legend:</span>
+                            <div className="flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5"/> Trend</div>
+                             <div className="flex items-center gap-1"><ArrowRightLeft className="w-3.5 h-3.5"/> Reversion</div>
+                             <div className="flex items-center gap-1"><Maximize className="w-3.5 h-3.5"/> Breakout</div>
                             <div className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Confirmed</div>
                             <div className="flex items-center gap-1"><XCircle className="w-3.5 h-3.5 text-red-500" /> Not Confirmed</div>
                             <div className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-blue-500" /> Live Data</div>
