@@ -29,15 +29,15 @@ const formatEventTime = (isoString: string) => {
 };
 
 const sentimentIcons = {
-  "Positive": <Smile className="w-6 h-6 text-green-500" />,
+  "Positive": <Smile className="w-6 h-6 text-accent" />,
   "Neutral": <Meh className="w-6 h-6 text-yellow-500" />,
-  "Negative": <Frown className="w-6 h-6 text-red-500" />,
+  "Negative": <Frown className="w-6 h-6 text-destructive" />,
 }
 
 const sentimentColors = {
-  "Positive": "bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200",
+  "Positive": "bg-accent/10 dark:bg-accent/20 text-accent",
   "Neutral": "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200",
-  "Negative": "bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200",
+  "Negative": "bg-destructive/10 dark:bg-destructive/20 text-destructive",
 }
 
 export default function NewsWarning() {

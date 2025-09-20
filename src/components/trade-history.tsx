@@ -41,7 +41,7 @@ type TradeHistoryProps = {
 
 const statusConfig = {
     open: { variant: "secondary", label: "Open" },
-    won: { variant: "default", className: "bg-green-600 hover:bg-green-700", label: "Won"},
+    won: { variant: "default", className: "bg-accent hover:bg-accent/90 text-accent-foreground", label: "Won"},
     lost: { variant: "destructive", label: "Lost" },
 };
 
@@ -127,8 +127,8 @@ export default function TradeHistory({ history, updateTradeStatus, clearHistory,
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
                       <span className="font-semibold">Toolkit:</span>
-                      <div className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Confirmed</div>
-                      <div className="flex items-center gap-1"><XCircle className="w-3.5 h-3.5 text-red-500" /> Not Confirmed</div>
+                      <div className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-accent" /> Confirmed</div>
+                      <div className="flex items-center gap-1"><XCircle className="w-3.5 h-3.5 text-destructive" /> Not Confirmed</div>
                       <div className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-blue-500" /> Live Data</div>
                       <div className="flex items-center gap-1"><TriangleAlert className="w-3.5 h-3.5 text-yellow-500" /> Mock Data</div>
                   </div>
@@ -237,7 +237,7 @@ export default function TradeHistory({ history, updateTradeStatus, clearHistory,
                           const strategy = STRATEGIES.find(s => s.id === trade.signal.strategy);
                           const StrategyIcon = strategy?.icon || Pause;
                           const SignalIcon = trade.signal.signal === 'Buy' ? ArrowUp : trade.signal.signal === 'Sell' ? ArrowDown : Pause;
-                          const signalColor = trade.signal.signal === 'Buy' ? 'text-green-600' : 'text-red-600';
+                          const signalColor = trade.signal.signal === 'Buy' ? 'text-accent' : 'text-destructive';
 
                           return (
                               <TableRow key={trade.id}>
@@ -332,7 +332,7 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
     <Tooltip>
         <TooltipTrigger asChild>
             <div className="flex items-center gap-1 text-xs">
-                {confirmed ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
+                {confirmed ? <CheckCircle className="w-4 h-4 text-accent" /> : <XCircle className="w-4 h-4 text-destructive" />}
             </div>
         </TooltipTrigger>
         <TooltipContent>

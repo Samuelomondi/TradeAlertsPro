@@ -217,7 +217,7 @@ const StatusItem = ({ label, description, isConfigured, fieldName, dialogTitle, 
     return (
         <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
             <div className="flex items-center gap-3">
-                 <div className={cn("flex-shrink-0 flex items-center gap-2 text-sm font-semibold", isConfigured ? "text-green-600" : "text-red-600")}>
+                 <div className={cn("flex-shrink-0 flex items-center gap-2 text-sm font-semibold", isConfigured ? "text-accent" : "text-destructive")}>
                     {isConfigured ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
                 </div>
                 <div className="space-y-0.5">

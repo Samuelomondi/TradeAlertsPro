@@ -55,10 +55,10 @@ export default function MarketHours({ selectedPair }: { selectedPair: string }) 
                 {sortedMarkets.map((market) => {
                 const isOpen = getMarketStatus(market, currentTime);
                 return (
-                    <Card key={market.name} className={cn("flex flex-col items-center p-6", isOpen ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20')}>
-                    <Globe className={cn("w-10 h-10 mb-2", isOpen ? 'text-green-600' : 'text-red-600')} />
+                    <Card key={market.name} className={cn("flex flex-col items-center p-6", isOpen ? 'bg-accent/10 dark:bg-accent/20' : 'bg-destructive/10 dark:bg-destructive/20')}>
+                    <Globe className={cn("w-10 h-10 mb-2", isOpen ? 'text-accent' : 'text-destructive')} />
                     <h3 className="text-lg font-semibold">{market.name}</h3>
-                    <p className={cn("font-bold", isOpen ? 'text-green-600' : 'text-red-600')}>
+                    <p className={cn("font-bold", isOpen ? 'text-accent' : 'text-destructive')}>
                         {isOpen ? 'Open' : 'Closed'}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
@@ -84,7 +84,7 @@ export default function MarketHours({ selectedPair }: { selectedPair: string }) 
                     return (
                         <Card key={overlap.name} className={cn(
                             "flex flex-col items-center p-6 relative", 
-                            isActive ? 'bg-green-100 dark:bg-green-900/20' : 'bg-muted',
+                            isActive ? 'bg-accent/10 dark:bg-accent/20' : 'bg-muted',
                             isRelevant && "border-primary border-2"
                         )}>
                             {isRelevant && (
@@ -93,9 +93,9 @@ export default function MarketHours({ selectedPair }: { selectedPair: string }) 
                                     <span>Relevant</span>
                                 </div>
                             )}
-                            <Layers className={cn("w-10 h-10 mb-2", isActive ? 'text-green-600' : 'text-muted-foreground')} />
+                            <Layers className={cn("w-10 h-10 mb-2", isActive ? 'text-accent' : 'text-muted-foreground')} />
                             <h3 className="text-lg font-semibold">{overlap.name}</h3>
-                            <p className={cn("font-bold", isActive ? 'text-green-600' : 'text-muted-foreground')}>
+                            <p className={cn("font-bold", isActive ? 'text-accent' : 'text-muted-foreground')}>
                                 {isActive ? 'Active' : 'Inactive'}
                             </p>
                             <p className="text-sm text-muted-foreground mt-1">

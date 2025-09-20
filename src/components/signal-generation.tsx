@@ -370,7 +370,7 @@ const OptimalConditionsIndicator = ({ selectedPair }: { selectedPair: string }) 
     const sessionName = activeOverlap ? activeOverlap.name : relevantOverlaps[0].name;
 
      return (
-        <Alert variant="default" className={cn(isOptimal ? "border-green-500/50 text-green-600 dark:text-green-400 [&>svg]:text-green-600" : "border-yellow-500/50 text-yellow-600 dark:text-yellow-400 [&>svg]:text-yellow-600")}>
+        <Alert variant="default" className={cn(isOptimal ? "border-accent/50 text-accent dark:text-accent [&>svg]:text-accent" : "border-yellow-500/50 text-yellow-600 dark:text-yellow-400 [&>svg]:text-yellow-600")}>
             <Star className="h-4 w-4" />
             <AlertTitle>
                 {isOptimal ? "Optimal Conditions" : "Sub-Optimal Conditions"}
@@ -385,18 +385,18 @@ const OptimalConditionsIndicator = ({ selectedPair }: { selectedPair: string }) 
 
 const signalStyles = {
     Buy: {
-        card: "border-green-500",
-        title: "text-green-600",
+        card: "border-accent",
+        title: "text-accent",
         icon: ArrowUp
     },
     Sell: {
-        card: "border-red-500",
-        title: "text-red-600",
+        card: "border-destructive",
+        title: "text-destructive",
         icon: ArrowDown
     },
     Hold: {
         card: "border-blue-500",
-        title: "text-blue-600",
+        title: "text-blue-500",
         icon: Pause
     }
 }
@@ -437,7 +437,7 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestam
                         {dataSource && (
                             <span className={cn(
                                 "text-xs font-semibold px-2 py-1 rounded-full",
-                                dataSource === 'live' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                dataSource === 'live' ? 'bg-accent/10 text-accent' : 'bg-yellow-100 text-yellow-800'
                             )}>
                                 Data: {dataSource.toUpperCase()}
                             </span>
@@ -479,8 +479,8 @@ const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
     const recentTrades = history.slice(1, 3);
 
     const signalIcon = (signal: string) => {
-        if (signal === 'Buy') return <ArrowUp className="w-5 h-5 text-green-500" />;
-        if (signal === 'Sell') return <ArrowDown className="w-5 h-5 text-red-500" />;
+        if (signal === 'Buy') return <ArrowUp className="w-5 h-5 text-accent" />;
+        if (signal === 'Sell') return <ArrowDown className="w-5 h-5 text-destructive" />;
         return <Pause className="w-5 h-5 text-blue-500" />;
     };
 
@@ -548,7 +548,7 @@ const ConfirmationItem = ({ label, confirmed }: { label?: string; confirmed: boo
         <TooltipTrigger asChild>
              <div className="flex items-center gap-1">
                 {label && <span className="text-muted-foreground font-medium">{label}</span>}
-                {confirmed ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
+                {confirmed ? <CheckCircle className="w-4 h-4 text-accent" /> : <XCircle className="w-4 h-4 text-destructive" />}
             </div>
         </TooltipTrigger>
         <TooltipContent>
