@@ -28,6 +28,7 @@ import type { TradeHistoryEntry, TradeStatus } from "@/lib/types";
 import TradePerformance from "./trade-performance";
 import { CURRENCY_PAIRS } from "@/lib/constants";
 import { Button } from "./ui/button";
+import { ThemeToggle } from "./theme-toggle";
 
 type View = "signals" | "history" | "info" | "market" | "news" | "help";
 
@@ -110,19 +111,22 @@ export default function Dashboard() {
             <CustomIcon className="w-8 h-8 text-primary" />
             <h1 className="text-xl font-semibold text-primary">TradeAlert</h1>
         </div>
-        <Menubar>
-            <MenubarMenu>
-                <MenubarTrigger>Menu</MenubarTrigger>
-                <MenubarContent>
-                    {menuItems.map((item) => (
-                        <MenubarItem key={item.id} onSelect={() => setActiveView(item.id)} className="gap-2">
-                             <item.icon className="w-4 h-4" />
-                            <span>{item.label}</span>
-                        </MenubarItem>
-                    ))}
-                </MenubarContent>
-            </MenubarMenu>
-        </Menubar>
+        <div className="flex items-center gap-2">
+            <Menubar>
+                <MenubarMenu>
+                    <MenubarTrigger>Menu</MenubarTrigger>
+                    <MenubarContent>
+                        {menuItems.map((item) => (
+                            <MenubarItem key={item.id} onSelect={() => setActiveView(item.id)} className="gap-2">
+                                <item.icon className="w-4 h-4" />
+                                <span>{item.label}</span>
+                            </MenubarItem>
+                        ))}
+                    </MenubarContent>
+                </MenubarMenu>
+            </Menubar>
+            <ThemeToggle />
+        </div>
       </header>
       <main className="flex-1 p-4 md:p-8 bg-background">
           {activeView === 'signals' && <SignalGeneration addTradeToHistory={addTradeToHistory} accountBalance={accountBalance} riskPercentage={riskPercentage} history={history} updateTradeStatus={updateTradeStatus} selectedPair={selectedPair} setSelectedPair={setSelectedPair} />}
