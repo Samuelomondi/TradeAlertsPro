@@ -11,14 +11,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui/card';
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -39,14 +37,11 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 
-
-const formSchema = z.object({
-  geminiApiKey: z.string().min(1, 'Gemini API Key is required.'),
-  twelveDataApiKey: z.string().min(1, 'Twelve Data API Key is required.'),
-  telegramChatId: z.string().optional(),
-  accountBalance: z.coerce.number().positive("Account balance must be positive."),
-  riskPercentage: z.coerce.number().min(0.1, "Risk must be at least 0.1%").max(100, "Cannot exceed 100%."),
-});
+const geminiSchema = z.object({ geminiApiKey: z.string().min(1, 'Gemini API Key is required.') });
+const twelveDataSchema = z.object({ twelveDataApiKey: z.string().min(1, 'Twelve Data API Key is required.') });
+const telegramSchema = z.object({ telegramChatId: z.string().optional() });
+const balanceSchema = z.object({ accountBalance: z.coerce.number().positive("Account balance must be positive.") });
+const riskSchema = z.object({ riskPercentage: z.coerce.number().min(0.1, "Risk must be at least 0.1%").max(100, "Cannot exceed 100%.") });
 
 type AppSettingsProps = {
     accountBalance: number;
@@ -62,34 +57,26 @@ export default function AppSettings({ accountBalance, riskPercentage, setAccount
   const [showGeminiKey, setShowGeminiKey] = useState(false);
   const [showTwelveDataKey, setShowTwelveDataKey] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-        geminiApiKey: settings.geminiApiKey || '',
-        twelveDataApiKey: settings.twelveDataApiKey || '',
-        telegramChatId: settings.telegramChatId || '',
-        accountBalance: accountBalance,
-        riskPercentage: riskPercentage,
-    },
-  });
-  
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    const { accountBalance, riskPercentage, ...apiSettings } = values;
-    setSettings(apiSettings as AppSettings);
-    setAccountBalance(accountBalance);
-    setRiskPercentage(riskPercentage);
+  const handleSave = (values: Partial<AppSettings> | { accountBalance: number } | { riskPercentage: number }) => {
+    if ('accountBalance' in values) {
+      setAccountBalance(values.accountBalance);
+    } else if ('riskPercentage' in values) {
+      setRiskPercentage(values.riskPercentage);
+    } else {
+      setSettings(values as AppSettings);
+    }
     
     toast({
-      title: 'Settings Saved',
-      description: 'Your settings have been successfully updated.',
+      title: 'Setting Saved',
+      description: 'Your setting has been successfully updated.',
     });
-  }
+  };
 
-  const isGeminiConfigured = !!form.watch('geminiApiKey');
-  const isTwelveDataConfigured = !!form.watch('twelveDataApiKey');
-  const isTelegramConfigured = !!form.watch('telegramChatId');
-  const isBalanceConfigured = form.watch('accountBalance') > 0;
-  const isRiskConfigured = form.watch('riskPercentage') > 0;
+  const isGeminiConfigured = !!settings.geminiApiKey;
+  const isTwelveDataConfigured = !!settings.twelveDataApiKey;
+  const isTelegramConfigured = !!settings.telegramChatId;
+  const isBalanceConfigured = accountBalance > 0;
+  const isRiskConfigured = riskPercentage > 0;
 
 
   return (
@@ -100,112 +87,133 @@ export default function AppSettings({ accountBalance, riskPercentage, setAccount
           Manage API keys, Telegram notifications, and risk parameters all in one place.
         </CardDescription>
       </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-6">
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertTitle>Client-Side Storage</AlertTitle>
-              <AlertDescription>
-                Your API keys and settings are stored securely in your browser's local
-                storage. They are not sent to any server other than the respective
-                API providers.
-              </AlertDescription>
-            </Alert>
-            
-            <div>
-              <h3 className="mb-4 text-lg font-medium">System Status & Configuration</h3>
-              <div className="space-y-2">
-                <StatusItem
-                  label="Gemini API"
-                  description="Powers AI-based features like news analysis."
-                  isConfigured={isGeminiConfigured}
-                  form={form}
-                  fieldName="geminiApiKey"
-                  dialogTitle="Edit Gemini API Key"
-                  dialogDescription="Enter your Google AI Studio API Key."
-                  inputType={showGeminiKey ? 'text' : 'password'}
-                  inputIcon={<KeyRound />}
-                  toggleVisibility={() => setShowGeminiKey(!showGeminiKey)}
-                  showVisibilityToggle={true}
-                  isVisible={showGeminiKey}
-                  iconInside={true}
-                />
-                 <StatusItem
-                  label="Twelve Data API"
-                  description="Provides market data for signal generation."
-                  isConfigured={isTwelveDataConfigured}
-                  form={form}
-                  fieldName="twelveDataApiKey"
-                  dialogTitle="Edit Twelve Data API Key"
-                  dialogDescription="Enter your Twelve Data API Key."
-                  inputType={showTwelveDataKey ? 'text' : 'password'}
-                  inputIcon={<KeyRound />}
-                  toggleVisibility={() => setShowTwelveDataKey(!showTwelveDataKey)}
-                  showVisibilityToggle={true}
-                  isVisible={showTwelveDataKey}
-                  iconInside={true}
-                />
-                <StatusItem
-                  label="Telegram Notifications"
-                  description="Sends private trade signals to your chat."
-                  isConfigured={isTelegramConfigured}
-                  form={form}
-                  fieldName="telegramChatId"
-                  dialogTitle="Edit Telegram Chat ID"
-                  dialogDescription="Enter your personal Telegram Chat ID to receive notifications."
-                  inputIcon={<Send />}
-                  iconInside={true}
-                />
-              </div>
-            </div>
+      <CardContent className="space-y-6">
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>Client-Side Storage</AlertTitle>
+          <AlertDescription>
+            Your API keys and settings are stored securely in your browser's local
+            storage. They are not sent to any server other than the respective
+            API providers.
+          </AlertDescription>
+        </Alert>
+        
+        <div>
+          <h3 className="mb-4 text-lg font-medium">System Status & Configuration</h3>
+          <div className="space-y-2">
+            <StatusItem
+              label="Gemini API"
+              description="Powers AI-based features like news analysis."
+              isConfigured={isGeminiConfigured}
+              fieldName="geminiApiKey"
+              dialogTitle="Edit Gemini API Key"
+              dialogDescription="Enter your Google AI Studio API Key."
+              inputType={showGeminiKey ? 'text' : 'password'}
+              inputIcon={<KeyRound />}
+              toggleVisibility={() => setShowGeminiKey(!showGeminiKey)}
+              showVisibilityToggle={true}
+              isVisible={showGeminiKey}
+              iconInside={true}
+              schema={geminiSchema}
+              defaultValue={settings.geminiApiKey || ''}
+              onSave={handleSave}
+            />
+             <StatusItem
+              label="Twelve Data API"
+              description="Provides market data for signal generation."
+              isConfigured={isTwelveDataConfigured}
+              fieldName="twelveDataApiKey"
+              dialogTitle="Edit Twelve Data API Key"
+              dialogDescription="Enter your Twelve Data API Key."
+              inputType={showTwelveDataKey ? 'text' : 'password'}
+              inputIcon={<KeyRound />}
+              toggleVisibility={() => setShowTwelveDataKey(!showTwelveDataKey)}
+              showVisibilityToggle={true}
+              isVisible={showTwelveDataKey}
+              iconInside={true}
+              schema={twelveDataSchema}
+              defaultValue={settings.twelveDataApiKey || ''}
+              onSave={handleSave}
+            />
+            <StatusItem
+              label="Telegram Notifications"
+              description="Sends private trade signals to your chat."
+              isConfigured={isTelegramConfigured}
+              fieldName="telegramChatId"
+              dialogTitle="Edit Telegram Chat ID"
+              dialogDescription="Enter your personal Telegram Chat ID to receive notifications."
+              inputIcon={<Send />}
+              iconInside={true}
+              schema={telegramSchema}
+              defaultValue={settings.telegramChatId || ''}
+              onSave={handleSave}
+            />
+          </div>
+        </div>
 
-            <Separator />
-            
-            <div>
-                <h3 className="mb-4 text-lg font-medium">Risk Management</h3>
-                <div className="space-y-2">
-                    <StatusItem
-                        label="Account Balance"
-                        description={`Current: $${form.watch('accountBalance').toLocaleString()}`}
-                        isConfigured={isBalanceConfigured}
-                        form={form}
-                        fieldName="accountBalance"
-                        dialogTitle="Edit Account Balance"
-                        dialogDescription="Set your total account balance for risk calculations."
-                        inputType="number"
-                        inputIcon={<DollarSign />}
-                        iconInside={true}
-                    />
-                    <StatusItem
-                        label="Risk Per Trade"
-                        description={`Current: ${form.watch('riskPercentage')}%`}
-                        isConfigured={isRiskConfigured}
-                        form={form}
-                        fieldName="riskPercentage"
-                        dialogTitle="Edit Risk Per Trade"
-                        dialogDescription="Set the percentage of your balance to risk on a single trade."
-                        inputType="number"
-                        inputProps={{ step: "0.1" }}
-                        inputIcon={<Percent />}
-                        iconInside={true}
-                    />
-                </div>
-                 <p className="text-xs text-muted-foreground pt-4">
-                    These values are used to automatically calculate the lot size for each new trade signal, based on the signal's stop loss.
-                </p>
+        <Separator />
+        
+        <div>
+            <h3 className="mb-4 text-lg font-medium">Risk Management</h3>
+            <div className="space-y-2">
+                <StatusItem
+                    label="Account Balance"
+                    description={`Current: $${accountBalance.toLocaleString()}`}
+                    isConfigured={isBalanceConfigured}
+                    fieldName="accountBalance"
+                    dialogTitle="Edit Account Balance"
+                    dialogDescription="Set your total account balance for risk calculations."
+                    inputType="number"
+                    inputIcon={<DollarSign />}
+                    iconInside={true}
+                    schema={balanceSchema}
+                    defaultValue={accountBalance}
+                    onSave={handleSave}
+                />
+                <StatusItem
+                    label="Risk Per Trade"
+                    description={`Current: ${riskPercentage}%`}
+                    isConfigured={isRiskConfigured}
+                    fieldName="riskPercentage"
+                    dialogTitle="Edit Risk Per Trade"
+                    dialogDescription="Set the percentage of your balance to risk on a single trade."
+                    inputType="number"
+                    inputProps={{ step: "0.1" }}
+                    inputIcon={<Percent />}
+                    iconInside={true}
+                    schema={riskSchema}
+                    defaultValue={riskPercentage}
+                    onSave={handleSave}
+                />
             </div>
-          </CardContent>
-          <CardFooter>
-            <Button type="submit">Save All Settings</Button>
-          </CardFooter>
-        </form>
-      </Form>
+             <p className="text-xs text-muted-foreground pt-4">
+                These values are used to automatically calculate the lot size for each new trade signal, based on the signal's stop loss.
+            </p>
+        </div>
+      </CardContent>
     </Card>
   );
 }
 
-const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogTitle, dialogDescription, inputType = 'text', inputIcon, toggleVisibility, showVisibilityToggle, isVisible, inputProps, iconInside = false }: any) => {
+const StatusItem = ({ label, description, isConfigured, fieldName, dialogTitle, dialogDescription, inputType = 'text', inputIcon, toggleVisibility, showVisibilityToggle, isVisible, inputProps, iconInside = false, schema, defaultValue, onSave }: any) => {
+    const [open, setOpen] = useState(false);
+    const form = useForm({
+        resolver: zodResolver(schema),
+        defaultValues: { [fieldName]: defaultValue },
+    });
+    
+    const onSubmit = (values: any) => {
+        onSave(values);
+        setOpen(false); // Close dialog on successful save
+    };
+    
+    // Reset form when dialog opens
+    React.useEffect(() => {
+        if (open) {
+            form.reset({ [fieldName]: defaultValue });
+        }
+    }, [open, defaultValue, fieldName, form]);
+
     return (
         <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
             <div className="flex items-center gap-3">
@@ -217,7 +225,7 @@ const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogT
                     <p className="text-xs text-muted-foreground">{description}</p>
                 </div>
             </div>
-            <Dialog>
+            <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
                         <Pencil className="h-4 w-4" />
@@ -228,49 +236,52 @@ const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogT
                         <DialogTitle>{dialogTitle}</DialogTitle>
                         <p className="text-sm text-muted-foreground">{dialogDescription}</p>
                     </DialogHeader>
-                    <FormField
-                        control={form.control}
-                        name={fieldName}
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormControl>
-                                <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">
-                                        {inputIcon}
-                                    </div>
-                                    <Input
-                                        type={inputType}
-                                        placeholder={`Enter ${label}`}
-                                        className="pl-10 pr-10"
-                                        {...field}
-                                        {...inputProps}
-                                    />
-                                    {showVisibilityToggle && (
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent"
-                                            onClick={toggleVisibility}
-                                        >
-                                            {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                        </Button>
-                                    )}
-                                </div>
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} id={`form-${fieldName}`}>
+                            <FormField
+                                control={form.control}
+                                name={fieldName}
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormControl>
+                                        <div className="relative">
+                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">
+                                                {inputIcon}
+                                            </div>
+                                            <Input
+                                                type={inputType}
+                                                placeholder={`Enter ${label}`}
+                                                className="pl-10 pr-10"
+                                                {...field}
+                                                {...inputProps}
+                                            />
+                                            {showVisibilityToggle && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent"
+                                                    onClick={toggleVisibility}
+                                                >
+                                                    {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </form>
+                    </Form>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button type="button" variant="outline">Close</Button>
+                            <Button type="button" variant="outline">Cancel</Button>
                         </DialogClose>
+                        <Button type="submit" form={`form-${fieldName}`}>Save</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>
     )
 }
-
-    
