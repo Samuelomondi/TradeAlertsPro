@@ -52,7 +52,7 @@ export async function getEconomicNews(
 const getEconomicNewsPrompt = ai.definePrompt({
   name: 'getEconomicNewsPrompt',
   output: {schema: EconomicNewsOutputSchema},
-  model: googleAI.model('gemini-1.5-flash-latest'),
+  model: googleAI.model('gemini-1.5-flash'),
   prompt: `You are a financial market analyst. Your task is to provide a list of 3 to 5 major, high-impact economic news events that are scheduled for the upcoming week.
 
   Focus on events that are known to cause significant volatility in the forex markets, such as interest rate decisions from major central banks (FOMC, ECB, BoJ), inflation reports (CPI), and employment data (NFP).
