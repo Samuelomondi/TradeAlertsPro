@@ -237,7 +237,7 @@ export default function TradeHistory({ history, updateTradeStatus, clearHistory,
                           const strategy = STRATEGIES.find(s => s.id === trade.signal.strategy);
                           const StrategyIcon = strategy?.icon || Pause;
                           const SignalIcon = trade.signal.signal === 'Buy' ? ArrowUp : trade.signal.signal === 'Sell' ? ArrowDown : Pause;
-                          const signalColor = trade.signal.signal === 'Buy' ? 'text-accent' : 'text-destructive';
+                          const signalColor = trade.signal.signal === 'Buy' ? 'text-green-600' : 'text-destructive';
 
                           return (
                               <TableRow key={trade.id}>
@@ -357,6 +357,8 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
         </Tooltip>
     );
 };
+
+    
 
     
 

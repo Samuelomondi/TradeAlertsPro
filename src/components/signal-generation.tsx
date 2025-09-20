@@ -385,8 +385,8 @@ const OptimalConditionsIndicator = ({ selectedPair }: { selectedPair: string }) 
 
 const signalStyles = {
     Buy: {
-        card: "border-accent",
-        title: "text-accent",
+        card: "border-green-500",
+        title: "text-green-600",
         icon: ArrowUp
     },
     Sell: {
@@ -479,7 +479,7 @@ const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
     const recentTrades = history.slice(1, 3);
 
     const signalIcon = (signal: string) => {
-        if (signal === 'Buy') return <ArrowUp className="w-5 h-5 text-accent" />;
+        if (signal === 'Buy') return <ArrowUp className="w-5 h-5 text-green-500" />;
         if (signal === 'Sell') return <ArrowDown className="w-5 h-5 text-destructive" />;
         return <Pause className="w-5 h-5 text-blue-500" />;
     };
@@ -574,5 +574,7 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
     );
 };
 
+
+    
 
     
