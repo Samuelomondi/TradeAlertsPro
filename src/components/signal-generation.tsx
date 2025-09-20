@@ -430,7 +430,7 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestam
 };
 
 const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
-    const recentTrades = history.slice(1, 4);
+    const recentTrades = history.slice(1, 3);
 
     const signalIcon = (signal: string) => {
         if (signal === 'Buy') return <ArrowUp className="w-5 h-5 text-green-500" />;
@@ -446,7 +446,7 @@ const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
                     <History className="w-5 h-5" />
                     <span>Recent Trades</span>
                 </CardTitle>
-                <CardDescription>A quick look at your last three signals.</CardDescription>
+                <CardDescription>A quick look at your last two signals.</CardDescription>
             </CardHeader>
             <CardContent>
                 <TooltipProvider>
@@ -532,3 +532,4 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
 
 
     
+
