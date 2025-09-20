@@ -175,6 +175,7 @@ export default function AppSettings({ accountBalance, riskPercentage, setAccount
                         dialogDescription="Set your total account balance for risk calculations."
                         inputType="number"
                         inputIcon={<DollarSign />}
+                        iconInside={true}
                     />
                     <StatusItem
                         label="Risk Per Trade"
@@ -187,6 +188,7 @@ export default function AppSettings({ accountBalance, riskPercentage, setAccount
                         inputType="number"
                         inputProps={{ step: "0.1" }}
                         inputIcon={<Percent />}
+                        iconInside={true}
                     />
                 </div>
                  <p className="text-xs text-muted-foreground pt-4">
@@ -232,18 +234,14 @@ const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogT
                         render={({ field }) => (
                             <FormItem>
                             <FormControl>
-                                <div className={cn("relative", !iconInside && "flex items-center gap-2")}>
-                                    {iconInside ? (
-                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">
-                                            {inputIcon}
-                                        </div>
-                                    ) : (
-                                        <div className="h-4 w-4 text-muted-foreground">{inputIcon}</div>
-                                    )}
+                                <div className="relative">
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">
+                                        {inputIcon}
+                                    </div>
                                     <Input
                                         type={inputType}
                                         placeholder={`Enter ${label}`}
-                                        className={cn(iconInside && "pl-8 pr-10", !iconInside && "w-full")}
+                                        className="pl-8 pr-10"
                                         {...field}
                                         {...inputProps}
                                     />
@@ -274,5 +272,3 @@ const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogT
         </div>
     )
 }
-
-    
