@@ -12,18 +12,25 @@ interface Market {
 }
 
 const markets: Market[] = [
+  { name: 'Sydney', openUtc: 22, closeUtc: 6 },
   { name: 'London', openUtc: 8, closeUtc: 16 },
   { name: 'New York', openUtc: 13, closeUtc: 21 },
   { name: 'Tokyo', openUtc: 0, closeUtc: 8 },
 ];
 
-// Sort markets by their opening time
-const sortedMarkets = [...markets].sort((a, b) => a.openUtc - b.openUtc);
+// Sort markets by their opening time, handling the overnight Sydney case
+const sortedMarkets = [...markets].sort((a, b) => {
+    // Treat Sydney's 22:00 as -2 for sorting purposes to place it first
+    const aOpen = a.name === 'Sydney' ? -2 : a.openUtc;
+    const bOpen = b.name === 'Sydney' ? -2 : b.openUtc;
+    return aOpen - bOpen;
+});
+
 
 function getMarketStatus(market: Market, currentHour: number) {
   if (market.openUtc < market.closeUtc) {
     return currentHour >= market.openUtc && currentHour < market.closeUtc;
-  } else { // Handles overnight markets like Tokyo
+  } else { // Handles overnight markets like Sydney & Tokyo
     return currentHour >= market.openUtc || currentHour < market.closeUtc;
   }
 }
@@ -55,10 +62,10 @@ export default function MarketHours() {
       <CardHeader>
         <CardTitle>Market Hours</CardTitle>
         <CardDescription>
-          Live status of major foreign exchange markets, sorted by opening time. Current local time: {localTime}
+          Live status of major forex sessions, ordered by their typical opening. This covers all major pairs including AUD, NZD (Sydney), JPY (Tokyo), EUR, GBP, CHF (London), and USD, CAD (New York). Current local time: {localTime}
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {sortedMarkets.map((market) => {
           const isOpen = getMarketStatus(market, currentUtcHour);
           return (
