@@ -370,7 +370,7 @@ const OptimalConditionsIndicator = ({ selectedPair }: { selectedPair: string }) 
     const sessionName = activeOverlap ? activeOverlap.name : relevantOverlaps[0].name;
 
      return (
-        <Alert variant="default" className={cn(isOptimal ? "border-accent/50 text-accent dark:text-accent [&>svg]:text-accent" : "border-yellow-500/50 text-yellow-600 dark:text-yellow-400 [&>svg]:text-yellow-600")}>
+        <Alert variant="default" className={cn(isOptimal ? "border-green-500/50 text-green-600 dark:text-green-400 [&>svg]:text-green-600" : "border-yellow-500/50 text-yellow-600 dark:text-yellow-400 [&>svg]:text-yellow-600")}>
             <Star className="h-4 w-4" />
             <AlertTitle>
                 {isOptimal ? "Optimal Conditions" : "Sub-Optimal Conditions"}
@@ -437,7 +437,7 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestam
                         {dataSource && (
                             <span className={cn(
                                 "text-xs font-semibold px-2 py-1 rounded-full",
-                                dataSource === 'live' ? 'bg-accent/10 text-accent' : 'bg-yellow-100 text-yellow-800'
+                                dataSource === 'live' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
                             )}>
                                 Data: {dataSource.toUpperCase()}
                             </span>
@@ -548,7 +548,7 @@ const ConfirmationItem = ({ label, confirmed }: { label?: string; confirmed: boo
         <TooltipTrigger asChild>
              <div className="flex items-center gap-1">
                 {label && <span className="text-muted-foreground font-medium">{label}</span>}
-                {confirmed ? <CheckCircle className="w-4 h-4 text-accent" /> : <XCircle className="w-4 h-4 text-destructive" />}
+                {confirmed ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-destructive" />}
             </div>
         </TooltipTrigger>
         <TooltipContent>

@@ -127,7 +127,7 @@ export default function TradeHistory({ history, updateTradeStatus, clearHistory,
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
                       <span className="font-semibold">Toolkit:</span>
-                      <div className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-accent" /> Confirmed</div>
+                      <div className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Confirmed</div>
                       <div className="flex items-center gap-1"><XCircle className="w-3.5 h-3.5 text-destructive" /> Not Confirmed</div>
                       <div className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-blue-500" /> Live Data</div>
                       <div className="flex items-center gap-1"><TriangleAlert className="w-3.5 h-3.5 text-yellow-500" /> Mock Data</div>
@@ -332,7 +332,7 @@ const ConfirmationItem = ({ label, confirmed }: { label: string; confirmed: bool
     <Tooltip>
         <TooltipTrigger asChild>
             <div className="flex items-center gap-1 text-xs">
-                {confirmed ? <CheckCircle className="w-4 h-4 text-accent" /> : <XCircle className="w-4 h-4 text-destructive" />}
+                {confirmed ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-destructive" />}
             </div>
         </TooltipTrigger>
         <TooltipContent>
