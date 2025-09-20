@@ -41,7 +41,7 @@ type TradeHistoryProps = {
 
 const statusConfig = {
     open: { variant: "secondary", label: "Open" },
-    won: { variant: "default", className: "bg-accent hover:bg-accent/90 text-accent-foreground", label: "Won"},
+    won: { variant: "default", className: "bg-green-600 hover:bg-green-600/90 text-primary-foreground", label: "Won"},
     lost: { variant: "destructive", label: "Lost" },
 };
 
@@ -357,9 +357,5 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
         </Tooltip>
     );
 };
-
-    
-
-    
 
     

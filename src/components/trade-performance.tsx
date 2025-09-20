@@ -22,7 +22,7 @@ export default function TradePerformance({ history }: TradePerformanceProps) {
 
     const kpiData = [
         { label: "Total Trades", value: totalTrades, icon: Target },
-        { label: "Wins", value: wins, icon: TrendingUp, color: "text-accent" },
+        { label: "Wins", value: wins, icon: TrendingUp, color: "text-green-600" },
         { label: "Losses", value: losses, icon: TrendingDown, color: "text-destructive" },
         { label: "Win Rate", value: `${winRate.toFixed(1)}%`, icon: Percent, color: "text-blue-500" },
     ];
@@ -49,10 +49,10 @@ export default function TradePerformance({ history }: TradePerformanceProps) {
                 </div>
                 <div>
                     <div className="flex justify-between items-center mb-1 text-sm">
-                        <span className="font-medium text-accent">Wins ({wins})</span>
+                        <span className="font-medium text-green-600">Wins ({wins})</span>
                         <span className="font-medium text-destructive">Losses ({losses})</span>
                     </div>
-                    <Progress value={winRate} className="h-3 [&>div]:bg-accent" />
+                    <Progress value={winRate} className="h-3 [&>div]:bg-green-600" />
                      <p className="text-xs text-muted-foreground mt-2">
                         {openTrades} trade(s) are still open and not included in the win rate calculation.
                     </p>
@@ -61,3 +61,5 @@ export default function TradePerformance({ history }: TradePerformanceProps) {
         </Card>
     );
 }
+
+    
