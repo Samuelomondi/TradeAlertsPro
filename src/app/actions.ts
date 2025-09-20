@@ -18,8 +18,8 @@ const signalSchema = z.object({
   strategy: z.custom<StrategyId>(),
   accountBalance: z.coerce.number(),
   riskPercentage: z.coerce.number(),
-  geminiApiKey: z.string().min(1, "Gemini API Key is required."),
-  twelveDataApiKey: z.string().min(1, "Twelve Data API Key is required."),
+  geminiApiKey: z.string().optional(),
+  twelveDataApiKey: z.string().optional(),
   telegramChatId: z.string().optional(),
 });
 
@@ -86,13 +86,13 @@ export async function generateSignalAction(formData: FormData): Promise<{ data?:
 }
 
 const ApiKeySchema = z.object({
-  geminiApiKey: z.string().min(1, "Gemini API Key is required."),
+  geminiApiKey: z.string().optional(),
 });
 
 export async function getNewsEventsAction(data: { geminiApiKey?: string }): Promise<EconomicEvent[]> {
     const validated = ApiKeySchema.safeParse(data);
-    if (!validated.success) {
-        throw new Error("API Key is missing or invalid.");
+    if (!validated.success || !validated.data.geminiApiKey) {
+        throw new Error("A Gemini API Key is required for this feature. Please add it in the App Settings.");
     }
     
     try {
@@ -109,17 +109,17 @@ export async function getNewsEventsAction(data: { geminiApiKey?: string }): Prom
 
 const NewsSentimentActionSchema = z.object({
     currencyPair: z.string(),
-    geminiApiKey: z.string().min(1, "Gemini API Key is required."),
+    geminiApiKey: z.string().optional(),
 });
 
 export async function getNewsSentimentAction(data: { currencyPair: string, geminiApiKey?: string }): Promise<NewsSentimentOutput> {
     const validated = NewsSentimentActionSchema.safeParse(data);
-     if (!validated.success) {
-        throw new Error("Currency pair or API key is missing or invalid.");
+     if (!validated.success || !validated.data.geminiApiKey) {
+        throw new Error("A Gemini API Key is required for this feature. Please add it in the App Settings.");
     }
     
     try {
-        const sentiment = await getNewsSentiment(validated.data);
+        const sentiment = await getNewsSentiment(validated.data as { currencyPair: string, geminiApiKey: string });
         return sentiment;
     } catch (error) {
         console.error(`Error fetching news sentiment for ${validated.data.currencyPair}:`, error);
