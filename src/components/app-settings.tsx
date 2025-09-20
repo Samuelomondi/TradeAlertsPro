@@ -241,7 +241,7 @@ const StatusItem = ({ label, description, isConfigured, form, fieldName, dialogT
                                     <Input
                                         type={inputType}
                                         placeholder={`Enter ${label}`}
-                                        className="pl-8 pr-10"
+                                        className="pl-10 pr-10"
                                         {...field}
                                         {...inputProps}
                                     />
