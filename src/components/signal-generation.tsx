@@ -308,7 +308,6 @@ export default function SignalGeneration({ addTradeToHistory, accountBalance, ri
                         dataSource={dataSource}
                         chartSeries={chartSeries || []}
                         timestamp={generationTimestamp}
-                        history={history}
                     />
                 </div>
             )}
@@ -341,20 +340,15 @@ const signalStyles = {
     }
 }
 
-const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestamp, history }: { 
+const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestamp }: { 
     signal: TradeSignal, 
     inputs: FormValues, 
     dataSource: MarketDataSource | null, 
     chartSeries: MarketDataSeries[],
-    timestamp: string,
-    history: TradeHistoryEntry[]
+    timestamp: string
 }) => {
     const rrr = signal.entry !== signal.stopLoss ? Math.abs((signal.takeProfit - signal.entry) / (signal.entry - signal.stopLoss)).toFixed(2) : 'N/A';
     
-    const currentTrade = history.find(trade => trade.id === timestamp);
-    const currentStatus = currentTrade?.status || 'open';
-    const config = statusConfig[currentStatus];
-
     const styles = signalStyles[signal.signal as keyof typeof signalStyles] || signalStyles.Hold;
     const Icon = styles.icon;
     const strategy = STRATEGIES.find(s => s.id === signal.strategy);
@@ -387,12 +381,6 @@ const GeneratedSignalCard = ({ signal, inputs, dataSource, chartSeries, timestam
                                 Data: {dataSource.toUpperCase()}
                             </span>
                         )}
-                         <Badge 
-                            variant={config.variant} 
-                            className={cn(config.className)}
-                        >
-                            {config.label}
-                        </Badge>
                     </div>
                 </div>
             </CardHeader>
@@ -450,7 +438,6 @@ const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
                 {recentTrades.length > 0 ? (
                     <div className="space-y-3">
                         {recentTrades.map((trade) => {
-                             const config = statusConfig[trade.status];
                              const strategy = STRATEGIES.find(s => s.id === trade.signal.strategy);
                              const StrategyIcon = strategy?.icon || Pause;
                              return (
@@ -472,12 +459,7 @@ const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
                                             <ConfirmationItem confirmed={trade.signal.bollingerConfirmation} />
                                             <DataSourceItem source={trade.source} />
                                         </div>
-                                        <Badge 
-                                            variant={config.variant} 
-                                            className={cn(config.className)}
-                                        >
-                                            {config.label}
-                                        </Badge>
+                                        <InfoItem label="Entry" value={trade.signal.entry.toFixed(5)} />
                                     </div>
                                 </div>
                              )
@@ -497,8 +479,8 @@ const RecentTradesCard = ({ history }: { history: TradeHistoryEntry[] }) => {
 
 const InfoItem = ({ label, value }: { label: string; value: string }) => (
     <div>
-        <p className="text-muted-foreground">{label}</p>
-        <p className="font-semibold">{value}</p>
+        <p className="text-muted-foreground text-xs">{label}</p>
+        <p className="font-semibold text-sm">{value}</p>
     </div>
 );
 
@@ -532,3 +514,6 @@ const DataSourceItem = ({ source }: { source?: 'live' | 'mock' }) => {
         </Tooltip>
     );
 };
+
+
+    
